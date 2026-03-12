@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.mycompany.sisoperativos2costatucci;
+package com.mycompany.sisoperativos2costatucci.logic;
 
 /**
  *
@@ -11,6 +11,7 @@ package com.mycompany.sisoperativos2costatucci;
 public class File {
     private int sizeFile;
     private Block firstBlock;
+    private String owner;
 
     public void setSizeFile(int sizeFile) {
         this.sizeFile = sizeFile;
@@ -27,8 +28,17 @@ public class File {
     public Block getFirstBlock() {
         return firstBlock;
     }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public String getOwner() {
+        return owner;
+    }
     
-    private File (int size, Queue bitMap){
+    public File (int size, Queue bitMap, String owner){
+        this.owner=owner;
         this.sizeFile = size;
         this.firstBlock = bitMap.popFirstBlock();
         Block block = this.firstBlock;
