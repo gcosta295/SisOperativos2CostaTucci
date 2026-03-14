@@ -12,6 +12,8 @@ public class Queue {
 
     private Block firstBlock;
     private Process firstProcess;
+    private File firstFile;
+    private Directory firstDirectory;
     private String queueName;
     private int queuesize;
 
@@ -31,6 +33,14 @@ public class Queue {
         return firstProcess;
     }
 
+    public File getFirstFile() {
+        return firstFile;
+    }
+
+    public Directory getFirstDirectory() {
+        return firstDirectory;
+    }
+
     public void setFirstBlock(Block firstBlock) {
         this.firstBlock = firstBlock;
     }
@@ -47,9 +57,19 @@ public class Queue {
         this.firstProcess = firstProcess;
     }
 
+    public void setFirstFile(File firstFile) {
+        this.firstFile = firstFile;
+    }
+
+    public void setFirstDirectory(Directory firstDirectory) {
+        this.firstDirectory = firstDirectory;
+    }
+
     public Queue(String name) {
         this.firstBlock = null;
         this.firstProcess = null;
+        this.firstDirectory = null;
+        this.firstFile = null;
         this.queueName = name;
         this.queuesize = 0;
     }
