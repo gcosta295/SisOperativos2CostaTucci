@@ -1,19 +1,34 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.sisoperativos2costatucci.logic;
 
-/**
- *
- * @author astv06
- */
 public class Block {
     private int id;
     private int size;
     private String info;
     private Block next;
 
+    // ==========================================
+    // 1. CONSTRUCTORES
+    // ==========================================
+    
+    // Constructor Original (Para cuando guardas datos directamente)
+    public Block(String info, int id) {
+        this.size = 8;
+        this.info = info;
+        this.next = null;
+        this.id = id;
+    }
+
+    // ¡NUEVO! Constructor para Bloques Vacíos (Ideal para iniciar tu BitMap)
+    public Block(int id) {
+        this.size = 8;
+        this.info = ""; // Inicia sin información
+        this.next = null;
+        this.id = id;
+    }
+
+    // ==========================================
+    // 2. GETTERS Y SETTERS
+    // ==========================================
     public void setSize(int size) {
         this.size = size;
     }
@@ -38,25 +53,11 @@ public class Block {
         return next;
     }
 
-    public Block(String info, int id) {
-        this.size = 8;
-        this.info = info;
-        this.next = null;
-        this.id=id;
-    }
-
-    /**
-     * @return the id
-     */
     public int getId() {
         return id;
     }
 
-    /**
-     * @param id the id to set
-     */
     public void setId(int id) {
         this.id = id;
     }
-    
 }
