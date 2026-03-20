@@ -1,13 +1,5 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.sisoperativos2costatucci.logic;
 
-/**
- *
- * @author astv06
- */
 public class Queue {
 
     private Block firstBlock;
@@ -17,54 +9,9 @@ public class Queue {
     private String queueName;
     private int queuesize;
 
-    public Block getFirstBlock() {
-        return firstBlock;
-    }
-
-    public String getQueueName() {
-        return queueName;
-    }
-
-    public int getQueuesize() {
-        return queuesize;
-    }
-
-    public Process getFirstProcess() {
-        return firstProcess;
-    }
-
-    public File getFirstFile() {
-        return firstFile;
-    }
-
-    public Directory getFirstDirectory() {
-        return firstDirectory;
-    }
-
-    public void setFirstBlock(Block firstBlock) {
-        this.firstBlock = firstBlock;
-    }
-
-    public void setQueueName(String queueName) {
-        this.queueName = queueName;
-    }
-
-    public void setQueuesize(int queuesize) {
-        this.queuesize = queuesize;
-    }
-
-    public void setFirstProcess(Process firstProcess) {
-        this.firstProcess = firstProcess;
-    }
-
-    public void setFirstFile(File firstFile) {
-        this.firstFile = firstFile;
-    }
-
-    public void setFirstDirectory(Directory firstDirectory) {
-        this.firstDirectory = firstDirectory;
-    }
-
+    // ==========================================
+    // CONSTRUCTOR
+    // ==========================================
     public Queue(String name) {
         this.firstBlock = null;
         this.firstProcess = null;
@@ -74,6 +21,60 @@ public class Queue {
         this.queuesize = 0;
     }
 
+    // ==========================================
+    // GETTERS Y SETTERS
+    // ==========================================
+    public Block getFirstBlock() {
+        return firstBlock;
+    }
+
+    public void setFirstBlock(Block firstBlock) {
+        this.firstBlock = firstBlock;
+    }
+
+    public Process getFirstProcess() {
+        return firstProcess;
+    }
+
+    public void setFirstProcess(Process firstProcess) {
+        this.firstProcess = firstProcess;
+    }
+
+    public File getFirstFile() {
+        return firstFile;
+    }
+
+    public void setFirstFile(File firstFile) {
+        this.firstFile = firstFile;
+    }
+
+    public Directory getFirstDirectory() {
+        return firstDirectory;
+    }
+
+    public void setFirstDirectory(Directory firstDirectory) {
+        this.firstDirectory = firstDirectory;
+    }
+
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
+    }
+
+    public int getQueuesize() {
+        return queuesize;
+    }
+
+    public void setQueuesize(int queuesize) {
+        this.queuesize = queuesize;
+    }
+
+    // ==========================================
+    // MÉTODOS PARA BLOQUES
+    // ==========================================
     public void addBlock(Block block) {
         if (this.firstBlock == null) {
             this.firstBlock = block;
@@ -112,11 +113,39 @@ public class Queue {
             Block headBlock = this.firstBlock;
             this.firstBlock = headBlock.getNext();
             headBlock.setNext(null);
-            this.queuesize -= 1; // ¡Faltaba esto!
+            this.queuesize -= 1; 
             return headBlock;
         } else {
             return null;
         }
     }
 
+    // ==========================================
+    // MÉTODOS PARA DIRECTORIOS Y ARCHIVOS
+    // ==========================================
+    public void addDirectory(Directory dir) {
+        if (this.firstDirectory == null) {
+            this.firstDirectory = dir;
+        } else {
+            Directory tempDir = this.firstDirectory;
+            while (tempDir.getNext() != null) {
+                tempDir = tempDir.getNext();
+            }
+            tempDir.setNext(dir);
+        }
+        this.queuesize += 1;
+    }
+
+    public void addFile(File file) {
+        if (this.firstFile == null) {
+            this.firstFile = file;
+        } else {
+            File tempFile = this.firstFile;
+            while (tempFile.getNext() != null) {
+                tempFile = tempFile.getNext();
+            }
+            tempFile.setNext(file);
+        }
+        this.queuesize += 1;
+    }
 }
