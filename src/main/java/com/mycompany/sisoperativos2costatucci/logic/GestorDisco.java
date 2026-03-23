@@ -34,6 +34,10 @@ public class GestorDisco {
     public int getBloquesLibres() {
         return colaLibres.getQueuesize();
     }
+
+    public Queue getColaLibres() {
+        return colaLibres;
+    }
     
     public PlanificadorDisco getPlanificador() {
         return planificador;
@@ -43,33 +47,25 @@ public class GestorDisco {
     // OPERACIONES CRUD DEL DISCO
     // =====================================
 
-    public File crearArchivo(int size, String owner, Color color) {
-        if (colaLibres.getQueuesize() < size) {
-            System.out.println("Error: Espacio insuficiente.");
-            return null; 
-        }
+public File crearArchivo(int size, String owner, Color color) {
+    File nuevoArchivo = new File(size, colaLibres, owner);
 
-        File nuevoArchivo = new File(size, colaLibres, owner);
-        
-        // Creamos una cola TEMPORAL de peticiones para enviársela al planificador
-        Queue peticionesEscritura = new Queue("Req_Escritura");
-
-        Block bloqueActual = nuevoArchivo.getFirstBlock();
-        while (bloqueActual != null) {
-            vistaDisco.asignarBloqueVisual(bloqueActual.getId(), color);
-            
-            // "Clonamos" el nodo usando su ID para no dañar la lista original del archivo
-            peticionesEscritura.addBlock(new Block("Req", bloqueActual.getId()));
-            
-            bloqueActual = bloqueActual.getNext();
-        }
-
-        // Le decimos al brazo mecánico que vaya a escribir estos bloques (Por defecto usamos FIFO al crear)
-        System.out.println("\n[GestorDisco] Solicitando ESCRITURA para archivo de " + owner);
-        planificador.ejecutarFIFO(peticionesEscritura);
-
-        return nuevoArchivo; 
+    // Si el archivo no pudo obtener sus bloques (espacio insuficiente)
+    if (nuevoArchivo.getFirstBlock() == null) {
+        System.out.println("Error: No hay bloques libres suficientes.");
+        return null; // Esto hará que tu JFrame muestre el error al usuario
     }
+
+    // Si llegó aquí, los bloques ya fueron EXTRAÍDOS de colaLibres
+    // Ahora solo pintamos lo que el archivo ya posee
+    Block bloqueActual = nuevoArchivo.getFirstBlock();
+    while (bloqueActual != null) {
+        vistaDisco.asignarBloqueVisual(bloqueActual.getId(), color);
+        bloqueActual = bloqueActual.getNext();
+    }
+
+    return nuevoArchivo; 
+}
 
     public void leerArchivo(File archivo, String politicaPlanificacion) {
         if (archivo == null || archivo.getFirstBlock() == null) return;

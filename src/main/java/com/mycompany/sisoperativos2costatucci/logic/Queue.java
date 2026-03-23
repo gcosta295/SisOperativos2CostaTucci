@@ -162,4 +162,29 @@ public class Queue {
         }
         this.queuesize += 1;
     }
+    
+    public Block popBlockById(int id) {
+    if (this.firstBlock == null) return null;
+
+    // Caso 1: Es el primero de la lista
+    if (this.firstBlock.getId() == id) {
+        return popFirstBlock();
+    }
+
+    // Caso 2: Buscar en el resto de la lista
+    Block prev = this.firstBlock;
+    Block current = this.firstBlock.getNext();
+
+    while (current != null) {
+        if (current.getId() == id) {
+            prev.setNext(current.getNext()); // Saltamos el nodo actual
+            current.setNext(null);           // Lo aislamos
+            this.queuesize -= 1;
+            return current;
+        }
+        prev = current;
+        current = current.getNext();
+    }
+    return null; // No se encontró o ya estaba ocupado
+}
 }
