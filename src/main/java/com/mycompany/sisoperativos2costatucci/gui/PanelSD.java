@@ -54,6 +54,18 @@ public class PanelSD extends JPanel {
             bloquesVisuales[id].setBackground(Color.WHITE);
         }
     }
+    
+    // Reinicia todos los bloques del panel al color blanco (Estado inicial)
+public void limpiarTodosLosBloques() {
+    if (bloquesVisuales != null) {
+        for (JPanel cuadrito : bloquesVisuales) {
+            cuadrito.setBackground(Color.WHITE);
+        }
+        // Repaint asegura que los cambios de color se vean inmediatamente
+        this.repaint();
+        this.revalidate();
+    }
+}
 
     /**
      * This method is called from within the constructor to initialize the form.

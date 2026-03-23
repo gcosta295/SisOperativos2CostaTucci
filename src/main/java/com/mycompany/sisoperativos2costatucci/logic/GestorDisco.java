@@ -114,4 +114,18 @@ public File crearArchivo(int size, String owner, Color color) {
         archivo.setFirstBlock(null);
         archivo.setSizeFile(0);
     }
+    
+    // Dentro de la clase GestorDisco
+public void reiniciarEstructura() {
+    // 1. Limpiamos visualmente los cuadritos
+    if (this.vistaDisco != null) {
+        this.vistaDisco.limpiarTodosLosBloques();
+    }
+
+    // 2. Reiniciamos la cola de bloques libres (suponiendo que son 181 bloques)
+    this.colaLibres = new Queue("Libres");
+    for (int i = 0; i < 181; i++) {
+        this.colaLibres.addBlock(new Block(i));
+    }
+}
 }

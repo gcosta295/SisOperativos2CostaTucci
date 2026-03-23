@@ -353,10 +353,12 @@ private Color obtenerColorAleatorio() {
     }//GEN-LAST:event_jadminisrtador1ActionPerformed
 
     private void crearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearActionPerformed
-    // 1. Validar que estemos en modo Admin
-    if (!"admin".equals(mode)) {
-        JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.");
-        return;
+        if (!jadminisrtador1.isSelected()) {
+        JOptionPane.showMessageDialog(this, 
+            "Acceso denegado. Use el modo Administrador.", 
+            "Error de Permisos", 
+            JOptionPane.ERROR_MESSAGE);
+        return; 
     }
 
     // 2. Validar selección en el árbol
@@ -420,9 +422,47 @@ private Color obtenerColorAleatorio() {
     }//GEN-LAST:event_eliminar1ActionPerformed
 
     private void crear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crear1ActionPerformed
-        if (mode=="admin"){
-           //crear directorio 
-        }
+    if (!jadminisrtador1.isSelected()) {
+        JOptionPane.showMessageDialog(this, 
+            "Acceso Denegado: Solo el Administrador puede crear directorios.", 
+            "Error de Permisos", 
+            JOptionPane.ERROR_MESSAGE);
+        return; 
+    }
+
+    // 2. Obtener el nodo seleccionado en el árbol
+    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+
+    // 3. Validar selección
+    if (nodoSeleccionado == null) {
+        JOptionPane.showMessageDialog(this, "Por favor, seleccione una carpeta en el árbol donde desea crear el directorio.");
+        return;
+    }
+
+    Object objetoNodo = nodoSeleccionado.getUserObject();
+    if (!(objetoNodo instanceof Directory)) {
+        JOptionPane.showMessageDialog(this, "No puede crear directorios dentro de un archivo.");
+        return;
+    }
+
+    Directory carpetaPadre = (Directory) objetoNodo;
+
+    // 4. Pedir el nombre del nuevo directorio
+    String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo directorio:");
+
+    if (nombre != null && !nombre.trim().isEmpty()) {
+        // 5. Crear e integrar en la estructura lógica
+        Directory nuevaCarpeta = new Directory(nombre);
+        carpetaPadre.addDirectory(nuevaCarpeta);
+
+        // 6. Refrescar el JTree visualmente
+        // Obtenemos la raíz actual para no perder la estructura completa
+        DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
+        DefaultMutableTreeNode raizNodo = (DefaultMutableTreeNode) modelo.getRoot();
+        refrescarArbolUI((Directory) raizNodo.getUserObject());
+        
+        JOptionPane.showMessageDialog(this, "Directorio '" + nombre + "' creado exitosamente.");
+    }
     }//GEN-LAST:event_crear1ActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
@@ -603,37 +643,57 @@ private void pintarArchivoEnPanel(File archivo, Color color) {
     // MÉTODO PARA VALIDAR LA ESTRUCTURA DEL JSON
     // ==========================================
     public boolean validarEstructuraJSON(String contenidoJson) {
-        try {
-            JSONObject raiz = new JSONObject(contenidoJson);
-            Directory directory = new Directory (raiz.getString("test_id")); 
-            int cabezalInicial = raiz.getInt("initial_head");
-            miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
-            JSONObject systemFiles = raiz.getJSONObject("system_files");
-            Iterator<String> keys = systemFiles.keys();
-            while (keys.hasNext()) {
-                String key = keys.next();
-                JSONObject fileData = systemFiles.getJSONObject(key);
-                File tempFile = miDisco.crearArchivo(fileData.getInt("blocks"), "Admin", obtenerColorAleatorio());
-                if (tempFile != null) {
-                    tempFile.setName(fileData.getString("name"));
-                    directory.addFile(tempFile);
-                } else {
-                    System.out.println("No se pudo crear el archivo " + fileData.getString("name") + " por falta de espacio.");
-                }
-            }          
-            JSONArray requests = raiz.getJSONArray("requests");
-            for (int i = 0; i < requests.length(); i++) {
-                JSONObject request = requests.getJSONObject(i);
-                Request request1 = new Request(request.getInt("pos"),request.getString("op"));
-                generalRequests.addRequest(request1);
+    try {
+        JSONObject raiz = new JSONObject(contenidoJson);
+        
+        // 1. LIMPIEZA TOTAL ANTES DE CARGAR
+        // Suponiendo que miDisco tiene un método para resetear bloques
+        miDisco.reiniciarEstructura(); 
+        generalRequests = new Queue("Requests"); // Vaciar cola de peticiones anteriores
+        
+        // 2. Nueva raíz desde el JSON
+        Directory directory = new Directory(raiz.getString("test_id")); 
+        
+        // 3. Configurar cabezal
+        int cabezalInicial = raiz.getInt("initial_head");
+        miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
+        
+        // 4. Cargar archivos del sistema
+        JSONObject systemFiles = raiz.getJSONObject("system_files");
+        Iterator<String> keys = systemFiles.keys();
+        
+        while (keys.hasNext()) {
+            String key = keys.next();
+            JSONObject fileData = systemFiles.getJSONObject(key);
+            
+            // miDisco.crearArchivo ya debería manejar la asignación de bloques libres
+            File tempFile = miDisco.crearArchivo(fileData.getInt("blocks"), "Admin", obtenerColorAleatorio());
+            
+            if (tempFile != null) {
+                tempFile.setName(fileData.getString("name"));
+                directory.addFile(tempFile);
+                // Pintamos visualmente los bloques que acaba de ocupar
+                pintarArchivoEnPanel(tempFile, obtenerColorAleatorio());
             }
-            refrescarArbolUI(directory);
-            return true;
-        } catch (JSONException e) {
-            System.out.println("Error de validación: " + e.getMessage());
-            return false;
+        }          
+
+        // 5. Cargar peticiones (Requests)
+        JSONArray requests = raiz.getJSONArray("requests");
+        for (int i = 0; i < requests.length(); i++) {
+            JSONObject request = requests.getJSONObject(i);
+            Request request1 = new Request(request.getInt("pos"), request.getString("op"));
+            generalRequests.addRequest(request1);
         }
+
+        // 6. Actualizar la interfaz con la NUEVA estructura
+        refrescarArbolUI(directory);
+        
+        return true;
+    } catch (JSONException e) {
+        System.out.println("Error de validación: " + e.getMessage());
+        return false;
     }
+}
     
     private DefaultMutableTreeNode getSelectedNode() {
     return (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
