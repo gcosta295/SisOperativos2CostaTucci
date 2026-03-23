@@ -374,6 +374,9 @@
               </Properties>
             </Component>
             <Container class="javax.swing.JScrollPane" name="jScrollPane2">
+              <Events>
+                <EventHandler event="componentShown" listener="java.awt.event.ComponentListener" parameters="java.awt.event.ComponentEvent" handler="jScrollPane2ComponentShown"/>
+              </Events>
 
               <Layout class="org.netbeans.modules.form.compat2.layouts.support.JScrollPaneSupportLayout"/>
             </Container>

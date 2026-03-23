@@ -33,77 +33,60 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private GestorDisco miDisco;
     private Queue generalRequests;
     private int header;
+    private String mode;
 
     /**
      * Creates new form JFramePrincipal
      */
     public JFramePrincipal() {
-        initComponents(); // ¡Esta línea la pone NetBeans, NO la borres ni la muevas!
-
-        // 1. PRIMERO Creamos el disco y su vista visual (181 bloques)
+        initComponents();
         miDisco = new GestorDisco(181, 50);
         header = 0;
         generalRequests = new Queue("Requests");
-
-        // 2. Extraemos el panel dibujado y lo metemos en el contenedor del NetBeans
-        panelContenedorDisco.setLayout(new java.awt.BorderLayout()); // Aseguramos el layout
-        panelContenedorDisco.removeAll(); // Limpiamos por si acaso
+        mode = null;
+        panelContenedorDisco.setLayout(new java.awt.BorderLayout());
+        panelContenedorDisco.removeAll();
         panelContenedorDisco.add(miDisco.getVistaDisco(), java.awt.BorderLayout.CENTER);
         panelContenedorDisco.revalidate();
         panelContenedorDisco.repaint();
-
-        // 3. SEGUNDO (Ahora que la pantalla ya tiene la cuadrícula), lanzamos la prueba
         iniciarDatosDePrueba();
     }
 
 // ==========================================
 // 1. GENERADOR DE COLORES ALEATORIOS
 // ==========================================
-    private Color obtenerColorAleatorio() {
-        // Generamos valores RGB al azar
-        float r = (float) Math.random();
-        float g = (float) Math.random();
-        float b = (float) Math.random();
+private Color obtenerColorAleatorio() {
+    // Generamos valores entre 0.2 y 0.8 
+    // Esto evita el negro total (0.0) y el blanco total (1.0)
+    float r = 0.2f + (float) Math.random() * 0.6f;
+    float g = 0.2f + (float) Math.random() * 0.6f;
+    float b = 0.2f + (float) Math.random() * 0.6f;
 
-        // El .brighter() ayuda a que los colores sean más vivos y no oscurezcan el número negro
-        return new Color(r, g, b).brighter();
-    }
+    // Retornamos el color. .brighter() ayuda a que resalten en el gris del disco.
+    return new Color(r, g, b).brighter();
+}
 
 // ==========================================
 // 2. MÉTODO RECURSIVO PARA PINTAR EL DISCO
 // ==========================================
     private void pintarArchivosEnDisco(Directory carpetaLogica, PanelSD panelDisco) {
-
-        // A. Recorrer y pintar los ARCHIVOS de esta carpeta
         if (carpetaLogica.getFiles() != null) {
             File actualArchivo = carpetaLogica.getFiles().getFirstFile();
-
             while (actualArchivo != null) {
-                // Creamos un color único para ESTE archivo
                 Color colorArchivo = obtenerColorAleatorio();
-
-                // Recorremos la cadena de BLOQUES de este archivo
                 Block actualBloque = actualArchivo.getFirstBlock();
                 while (actualBloque != null) {
-                    // Le decimos a tu PanelSD que pinte este cuadrito específico
                     panelDisco.asignarBloqueVisual(actualBloque.getId(), colorArchivo);
-
-                    actualBloque = actualBloque.getNext(); // Pasamos al siguiente bloque
+                    actualBloque = actualBloque.getNext();
                 }
-
-                actualArchivo = actualArchivo.getNext(); // Pasamos al siguiente archivo
+                actualArchivo = actualArchivo.getNext();
             }
         }
-
-        // B. Recorrer las SUBCARPETAS (Magia recursiva)
         if (carpetaLogica.getDirectories() != null) {
             Directory actualDir = carpetaLogica.getDirectories().getFirstDirectory();
-
             while (actualDir != null) {
-                // Entramos a la subcarpeta a ver qué archivos tiene para pintarlos
                 pintarArchivosEnDisco(actualDir, panelDisco);
-
-                actualDir = actualDir.getNext(); // Pasamos a la siguiente subcarpeta
+                actualDir = actualDir.getNext();
             }
         }
     }
@@ -289,6 +272,12 @@ public class JFramePrincipal extends javax.swing.JFrame {
         jLabel5.setText("Log");
         jLabel5.setOpaque(true);
 
+        jScrollPane2.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                jScrollPane2ComponentShown(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -350,31 +339,96 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jusuarioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jusuarioActionPerformed
-        // TODO add your handling code here:
+        if (mode == "admin" || mode == null){
+            mode = "user";
+            System.out.println("cambio de modo");
+        }
     }//GEN-LAST:event_jusuarioActionPerformed
 
     private void jadminisrtador1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jadminisrtador1ActionPerformed
-        // TODO add your handling code here:
+        if (mode == "user"|| mode == null){
+            mode = "admin";
+            System.out.println("cambio de modo");            
+        }
     }//GEN-LAST:event_jadminisrtador1ActionPerformed
 
     private void crearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearActionPerformed
-        // TODO add your handling code here:
+    // 1. Validar que estemos en modo Admin
+    if (!"admin".equals(mode)) {
+        JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.");
+        return;
+    }
+
+    // 2. Validar selección en el árbol
+    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+    if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
+        JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
+        return;
+    }
+
+    Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
+
+    // 3. Pedir y Validar Nombre
+    String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
+    if (nombre == null || nombre.trim().isEmpty()) return; // Cancelado o vacío
+
+    // 4. Pedir y Validar Tamaño (Bloques)
+    String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
+    if (bloquesStr == null) return;
+
+    try {
+        int tamano = Integer.parseInt(bloquesStr);
+        if (tamano <= 0) {
+            JOptionPane.showMessageDialog(this, "El tamaño debe ser mayor a 0.");
+            return;
+        }
+
+        // 5. SOLICITAR AL DISCO (Aquí ocurre la magia de la cola de libres)
+        // El disco saca los bloques de 'colaLibres' y los pinta en el panel
+        File nuevoFile = miDisco.crearArchivo(tamano, "Admin", obtenerColorAleatorio());
+
+        if (nuevoFile != null) {
+            // Seteamos el nombre y lo agregamos a la estructura lógica
+            nuevoFile.setName(nombre.trim());
+            dirPadre.addFile(nuevoFile); 
+
+            // 6. ACTUALIZAR INTERFAZ (Árbol)
+            // Esto asume que tienes un método que reconstruye el TreeModel
+            refrescarArbolUI((Directory) ((DefaultMutableTreeNode)arbolDirectorios.getModel().getRoot()).getUserObject());
+            
+            JOptionPane.showMessageDialog(this, "Archivo '" + nombre + "' creado en los bloques libres del disco.");
+        } else {
+            JOptionPane.showMessageDialog(this, "ERROR: No hay suficiente espacio libre en el disco.");
+        }
+
+    } catch (NumberFormatException e) {
+        JOptionPane.showMessageDialog(this, "Error: Ingrese un número válido para los bloques.");
+    }
+
     }//GEN-LAST:event_crearActionPerformed
 
     private void eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminarActionPerformed
-        // TODO add your handling code here:
+        if (mode=="admin"){
+            //eliminar archivo o directorio
+        }
     }//GEN-LAST:event_eliminarActionPerformed
 
     private void eliminar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminar1ActionPerformed
-        // TODO add your handling code here:
+        if (mode=="admin"||mode=="user"){
+            //lectura de archivo
+        }
     }//GEN-LAST:event_eliminar1ActionPerformed
 
     private void crear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crear1ActionPerformed
-        // TODO add your handling code here:
+        if (mode=="admin"){
+           //crear directorio 
+        }
     }//GEN-LAST:event_crear1ActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
-        // TODO add your handling code here:
+        if (mode=="admin"){
+            
+        }
     }//GEN-LAST:event_updateActionPerformed
 
     private void JsonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_JsonActionPerformed
@@ -389,37 +443,29 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 boolean esValido = validarEstructuraJSON(contenidoJson);
                 if (esValido) {
                     JOptionPane.showMessageDialog(this, "Archivo JSON leído y validado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-                    // Aquí es donde, en el futuro, extraeremos los datos para crear tus archivos y carpetas lógicas
                 } else {
                     JOptionPane.showMessageDialog(this, "El archivo JSON no tiene la estructura correcta (faltan campos o hay tipos de datos incorrectos).", "Error de Formato", JOptionPane.WARNING_MESSAGE);
                 }
-                
             } catch (Exception e) {
-                // Manejar errores (ej. si el archivo no existe o no se puede leer)
                 JOptionPane.showMessageDialog(this, "Error al leer el archivo:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
     }//GEN-LAST:event_JsonActionPerformed
 
     private void jComboPlanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboPlanActionPerformed
-        // TODO add your handling code here:
+    if (mode =="admin"){
+        //planificador
+    }
     }//GEN-LAST:event_jComboPlanActionPerformed
 
-    // Método para actualizar la interfaz
-    // ==========================================
-// MÉTODO PRINCIPAL PARA REFRESCAR EL ÁRBOL
-// ==========================================
+    private void jScrollPane2ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jScrollPane2ComponentShown
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jScrollPane2ComponentShown
+
     public void refrescarArbolUI(Directory carpetaRaizLogica) {
-        // 1. Guardamos el OBJETO DIRECTORY completo (no solo el nombre) en el nodo principal
         DefaultMutableTreeNode nodoRaizVisual = new DefaultMutableTreeNode(carpetaRaizLogica);
-
-        // 2. Llenamos ese nodo con tus carpetas y archivos (usando el método recursivo)
         poblarNodoRecursivo(carpetaRaizLogica, nodoRaizVisual);
-
-        // 3. LA MAGIA: Creamos un modelo con tus datos y se lo aplicamos al JTree de NetBeans
         DefaultTreeModel modelo = new DefaultTreeModel(nodoRaizVisual);
-
-        // Aquí usamos la variable que renombraste en NetBeans
         arbolDirectorios.setModel(modelo);
     }
 
@@ -427,119 +473,133 @@ public class JFramePrincipal extends javax.swing.JFrame {
 // EL MÉTODO RECURSIVO (CORREGIDO)
 // ==========================================
     private void poblarNodoRecursivo(Directory carpetaLogica, DefaultMutableTreeNode nodoPadreVisual) {
-
-        // 1. Llenar los Subdirectorios
         if (carpetaLogica.getDirectories() != null) {
-            // Usamos getFirstDirectory() que es el método real de tu clase Queue
             Directory actualDir = carpetaLogica.getDirectories().getFirstDirectory();
-
             while (actualDir != null) {
                 DefaultMutableTreeNode nodoSubCarpeta = new DefaultMutableTreeNode(actualDir);
                 nodoPadreVisual.add(nodoSubCarpeta);
-
-                // Magia recursiva por si esta carpeta tiene más carpetas adentro
                 poblarNodoRecursivo(actualDir, nodoSubCarpeta);
-
-                // CORRECCIÓN: Saltamos al siguiente directorio (tu código decía "actualDir.get")
                 actualDir = actualDir.getNext();
             }
         }
-
-        // 2. Llenar los Archivos
         if (carpetaLogica.getFiles() != null) {
-            // CORRECCIÓN: Usamos getFirstFile() en vez de getHead()
             File actualArchivo = carpetaLogica.getFiles().getFirstFile();
-
             while (actualArchivo != null) {
                 DefaultMutableTreeNode nodoArchivo = new DefaultMutableTreeNode(actualArchivo);
                 nodoPadreVisual.add(nodoArchivo);
-
-                // Pasamos al siguiente File en la cola
                 actualArchivo = actualArchivo.getNext();
             }
         }
     }
 
-    private void iniciarDatosDePrueba() {
-        System.out.println("Iniciando datos de prueba...");
+private void iniciarDatosDePrueba() {
+    // 1. Obtenemos la cola de libres real del disco
+    Queue colaReal = miDisco.getColaLibres(); 
+    if (colaReal == null) return;
 
-        // ==========================================
-        // 1. PREPARAMOS EL DISCO (BITMAP)
-        // ==========================================
-        // Simulamos un BitMap con 181 bloques libres (para que coincida con tu miDisco)
-        Queue bitMapSimulado = new Queue("BitMap Libre");
-        for (int i = 0; i < 181; i++) {
-            bitMapSimulado.addBlock(new Block(i));
-        }
+    // 2. Definimos la raíz y carpetas adicionales
+    Directory carpetaRaiz = new Directory("Disco C:");
+    Directory carpetaFotos = new Directory("Fotos_Vacaciones");
+    Directory carpetaDocumentos = new Directory("Mis_Documentos");
+    
+    carpetaRaiz.addDirectory(carpetaFotos);
+    carpetaRaiz.addDirectory(carpetaDocumentos);
 
-        // ==========================================
-        // 2. CREAMOS LA ESTRUCTURA DE CARPETAS
-        // ==========================================
-        Directory carpetaRaiz = new Directory("Disco C:");
-        Directory carpetaDocs = new Directory("Documentos");
-        Directory carpetaFotos = new Directory("Imágenes");
-
-        carpetaRaiz.addDirectory(carpetaDocs);
-        carpetaRaiz.addDirectory(carpetaFotos);
-
-        // ==========================================
-        // 3. CREAMOS LOS ARCHIVOS Y REPARTIMOS BLOQUES
-        // ==========================================
-        File archivo1 = new File(5, bitMapSimulado, "Admin");
-        archivo1.setName("informe_final.pdf");
-        carpetaDocs.addFile(archivo1);
-
-        File archivo2 = new File(2, bitMapSimulado, "Admin");
-        archivo2.setName("presupuesto.xlsx");
-        carpetaDocs.addFile(archivo2);
-
-        File archivo3 = new File(8, bitMapSimulado, "Admin");
-        archivo3.setName("foto_playa.png");
-        carpetaFotos.addFile(archivo3);
-
-        File archivo4 = new File(3, bitMapSimulado, "Admin");
-        archivo4.setName("leame.txt");
-        carpetaRaiz.addFile(archivo4);
-
-        // ==========================================
-        // 4. ¡DIBUJAMOS EN PANTALLA!
-        // ==========================================
-        // A. Refrescamos el árbol visual a la izquierda
-        refrescarArbolUI(carpetaRaiz);
-
-        // B. ¡CORRECCIÓN AQUÍ! Pintamos usando el panel extraído de tu GestorDisco
-        // Hacemos un "cast" a (PanelSD) para asegurarnos de que Java sepa qué tipo de panel es
-        pintarArchivosEnDisco(carpetaRaiz, (PanelSD) miDisco.getVistaDisco());
-
-        System.out.println("¡Árbol y Disco dibujados con éxito!");
+    // --- ARCHIVO 1: informe_final.pdf (8 bloques) ---
+    File informe = new File(8, colaReal, "Admin");
+    informe.setName("informe_final.pdf");
+    carpetaDocumentos.addFile(informe); // Guardado en documentos
+    
+    Color colorRojo = new Color(255, 51, 51);
+    Block b1 = informe.getFirstBlock();
+    while (b1 != null) {
+        miDisco.getVistaDisco().asignarBloqueVisual(b1.getId(), colorRojo);
+        b1 = b1.getNext();
     }
 
-    /**
-     * @param args the command line arguments
-     */
-    public static void main(String args[]) {
+    // --- ARCHIVO 2: foto_en_la_playa.jpg (12 bloques) ---
+    File foto = new File(12, colaReal, "Usuario");
+    foto.setName("foto_en_la_playa.jpg");
+    carpetaFotos.addFile(foto); // Guardado en fotos
+    
+    Color colorAmarillo = new Color(255, 204, 0); // Color arena/playa
+    Block b2 = foto.getFirstBlock();
+    while (b2 != null) {
+        miDisco.getVistaDisco().asignarBloqueVisual(b2.getId(), colorAmarillo);
+        b2 = b2.getNext();
+    }
+
+    // --- ARCHIVO 3: sistema.log (4 bloques) ---
+    File log = new File(4, colaReal, "System");
+    log.setName("sistema.log");
+    carpetaRaiz.addFile(log); // Guardado en la raíz
+    
+    Color colorAzul = new Color(51, 153, 255);
+    Block b3 = log.getFirstBlock();
+    while (b3 != null) {
+        miDisco.getVistaDisco().asignarBloqueVisual(b3.getId(), colorAzul);
+        b3 = b3.getNext();
+    }
+
+    // 3. Refrescar el árbol visual
+    refrescarArbolUI(carpetaRaiz);
+}
+/**
+ * Método auxiliar para no repetir el código del 'while' 
+ * cada vez que creamos un archivo de prueba.
+ */
+private void pintarArchivoEnPanel(File archivo, Color color) {
+    if (archivo == null) return;
+    
+    Block aux = archivo.getFirstBlock();
+    while (aux != null) {
+        // Marcamos el bloque en la vista visual del PanelSD
+        miDisco.getVistaDisco().asignarBloqueVisual(aux.getId(), color);
+        aux = aux.getNext();
+    }
+}
+
+     public static void main(String args[]) {
+
         /* Set the Nimbus look and feel */
+
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+
         /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+
          * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+
          */
+
         try {
+
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
+
                 if ("Nimbus".equals(info.getName())) {
+
                     javax.swing.UIManager.setLookAndFeel(info.getClassName());
+
                     break;
+
                 }
+
             }
+
         } catch (ReflectiveOperationException | javax.swing.UnsupportedLookAndFeelException ex) {
+
             logger.log(java.util.logging.Level.SEVERE, null, ex);
+
         }
+
         //</editor-fold>
 
+
         /* Create and display the form */
+
         java.awt.EventQueue.invokeLater(() -> new JFramePrincipal().setVisible(true));
-    }
-    
-    // ==========================================
+
+    } 
+// ==========================================
     // MÉTODO PARA VALIDAR LA ESTRUCTURA DEL JSON
     // ==========================================
     public boolean validarEstructuraJSON(String contenidoJson) {
@@ -574,7 +634,13 @@ public class JFramePrincipal extends javax.swing.JFrame {
             return false;
         }
     }
-
+    
+    private DefaultMutableTreeNode getSelectedNode() {
+    return (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+    }
+    
+    
+    
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Json;
     private javax.swing.JPanel PanelControles;

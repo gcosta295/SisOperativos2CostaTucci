@@ -40,28 +40,31 @@ public class File {
         return owner;
     }
 
-    public File(int size, Queue bitMap, String owner) {
-        this.owner = owner;
-        this.sizeFile = size;
-        this.next = null; // Inicializamos el puntero del siguiente archivo vacío
+  public File(int size, Queue bitMap, String owner) {
+    // VALIDACIÓN PREVIA: Si no hay suficientes bloques, ni siquiera empezamos
+    if (bitMap.getQueuesize() < size) {
+        this.firstBlock = null;
+        this.sizeFile = 0;
+        return; // Salimos sin tocar el BitMap
+    }
 
-        this.firstBlock = bitMap.popFirstBlock();
+    this.owner = owner;
+    this.sizeFile = size;
+    this.next = null;
 
-        // Si firstBlock no es null, procedemos a sacar los demás
-        if (this.firstBlock != null) {
-            Block block = this.firstBlock;
-            while (size > 1) {
-                Block newBlock = bitMap.popFirstBlock();
-                if (newBlock == null) {
-                    break; // Si ya no hay bloques libres, paramos
-                }
-                block.setNext(newBlock);
-                block = newBlock;
-                size -= 1;
+    // Ahora sí, sacamos bloques con seguridad
+    this.firstBlock = bitMap.popFirstBlock();
+    if (this.firstBlock != null) {
+        Block current = this.firstBlock;
+        for (int i = 1; i < size; i++) {
+            Block nextBlock = bitMap.popFirstBlock();
+            if (nextBlock != null) {
+                current.setNext(nextBlock);
+                current = nextBlock;
             }
         }
     }
-
+}
     public File getNext() {
         return next;
     }
