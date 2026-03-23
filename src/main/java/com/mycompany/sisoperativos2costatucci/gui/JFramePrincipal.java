@@ -9,6 +9,7 @@ import com.mycompany.sisoperativos2costatucci.logic.Directory;
 import com.mycompany.sisoperativos2costatucci.logic.File;
 import com.mycompany.sisoperativos2costatucci.logic.GestorDisco;
 import com.mycompany.sisoperativos2costatucci.logic.Queue;
+import com.mycompany.sisoperativos2costatucci.logic.Request;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.Color;
@@ -30,6 +31,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(JFramePrincipal.class.getName());
     private GestorDisco miDisco;
+    private Queue requests;
+    private int header;
 
     /**
      * Creates new form JFramePrincipal
@@ -547,8 +550,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JSONArray requests = raiz.getJSONArray("requests");
             for (int i = 0; i < requests.length(); i++) {
                 JSONObject request = requests.getJSONObject(i);
-                request.getInt("pos"); 
-                request.getString("op"); 
+                Request request1 = new Request(request.getInt("pos"),request.getString("op"));
             }
             return true;
         } catch (JSONException e) {

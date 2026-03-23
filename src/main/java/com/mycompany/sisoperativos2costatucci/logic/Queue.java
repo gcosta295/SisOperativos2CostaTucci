@@ -6,6 +6,7 @@ public class Queue {
     private Process firstProcess;
     private File firstFile;
     private Directory firstDirectory;
+    private Request firstRequest;
     private String queueName;
     private int queuesize;
 
@@ -145,6 +146,19 @@ public class Queue {
                 tempFile = tempFile.getNext();
             }
             tempFile.setNext(file);
+        }
+        this.queuesize += 1;
+    }
+    
+    public void addRequest(Request request) {
+        if (this.firstRequest == null) {
+            this.firstRequest = request;
+        } else {
+            Request tempRequest = this.firstRequest;
+            while (tempRequest.getNextRequest()!= null) {
+                tempRequest = tempRequest.getNextRequest();
+            }
+            tempRequest.setNextRequest(request);
         }
         this.queuesize += 1;
     }
