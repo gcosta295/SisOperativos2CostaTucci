@@ -31,7 +31,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
 
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(JFramePrincipal.class.getName());
     private GestorDisco miDisco;
-    private Queue requests;
+    private Queue generalRequests;
     private int header;
 
     /**
@@ -42,6 +42,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
 
         // 1. PRIMERO Creamos el disco y su vista visual (181 bloques)
         miDisco = new GestorDisco(181, 50);
+        header = 0;
+        generalRequests = new Queue("Requests");
 
         // 2. Extraemos el panel dibujado y lo metemos en el contenedor del NetBeans
         panelContenedorDisco.setLayout(new java.awt.BorderLayout()); // Aseguramos el layout
@@ -170,6 +172,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         jLabel3.setOpaque(true);
 
         jComboPlan.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "SSTF", "SCAN", "C-SCAN" }));
+        jComboPlan.addActionListener(this::jComboPlanActionPerformed);
 
         crear.setText("Crear Archivo");
         crear.addActionListener(this::crearActionPerformed);
@@ -398,6 +401,10 @@ public class JFramePrincipal extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_JsonActionPerformed
 
+    private void jComboPlanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboPlanActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jComboPlanActionPerformed
+
     // Método para actualizar la interfaz
     // ==========================================
 // MÉTODO PRINCIPAL PARA REFRESCAR EL ÁRBOL
@@ -539,19 +546,28 @@ public class JFramePrincipal extends javax.swing.JFrame {
         try {
             JSONObject raiz = new JSONObject(contenidoJson);
             Directory directory = new Directory (raiz.getString("test_id")); 
-            raiz.getInt("initial_head");                                                    //Inicio del cabezal
+            int cabezalInicial = raiz.getInt("initial_head");
+            miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
             JSONObject systemFiles = raiz.getJSONObject("system_files");
             Iterator<String> keys = systemFiles.keys();
             while (keys.hasNext()) {
                 String key = keys.next();
                 JSONObject fileData = systemFiles.getJSONObject(key);
-                File tempFile = new File (fileData.getInt("blocks"),directory.getFiles(),null);
+                File tempFile = miDisco.crearArchivo(fileData.getInt("blocks"), "Admin", obtenerColorAleatorio());
+                if (tempFile != null) {
+                    tempFile.setName(fileData.getString("name"));
+                    directory.addFile(tempFile);
+                } else {
+                    System.out.println("No se pudo crear el archivo " + fileData.getString("name") + " por falta de espacio.");
+                }
             }          
             JSONArray requests = raiz.getJSONArray("requests");
             for (int i = 0; i < requests.length(); i++) {
                 JSONObject request = requests.getJSONObject(i);
                 Request request1 = new Request(request.getInt("pos"),request.getString("op"));
+                generalRequests.addRequest(request1);
             }
+            refrescarArbolUI(directory);
             return true;
         } catch (JSONException e) {
             System.out.println("Error de validación: " + e.getMessage());
