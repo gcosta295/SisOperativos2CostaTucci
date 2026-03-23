@@ -12,6 +12,15 @@ import com.mycompany.sisoperativos2costatucci.logic.Queue;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.Color;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
+import java.util.Iterator;
 
 /**
  *
@@ -363,7 +372,27 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_updateActionPerformed
 
     private void JsonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_JsonActionPerformed
-        // TODO add your handling code here:
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter filtro = new FileNameExtensionFilter("Archivos JSON", "json");
+        fileChooser.setFileFilter(filtro);
+        int seleccion = fileChooser.showOpenDialog(this);
+        if (seleccion == JFileChooser.APPROVE_OPTION) {
+            java.io.File archivo = fileChooser.getSelectedFile();
+            try {
+                String contenidoJson = new String(Files.readAllBytes(Paths.get(archivo.getAbsolutePath())));
+                boolean esValido = validarEstructuraJSON(contenidoJson);
+                if (esValido) {
+                    JOptionPane.showMessageDialog(this, "Archivo JSON leído y validado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    // Aquí es donde, en el futuro, extraeremos los datos para crear tus archivos y carpetas lógicas
+                } else {
+                    JOptionPane.showMessageDialog(this, "El archivo JSON no tiene la estructura correcta (faltan campos o hay tipos de datos incorrectos).", "Error de Formato", JOptionPane.WARNING_MESSAGE);
+                }
+                
+            } catch (Exception e) {
+                // Manejar errores (ej. si el archivo no existe o no se puede leer)
+                JOptionPane.showMessageDialog(this, "Error al leer el archivo:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }//GEN-LAST:event_JsonActionPerformed
 
     // Método para actualizar la interfaz
@@ -498,6 +527,34 @@ public class JFramePrincipal extends javax.swing.JFrame {
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new JFramePrincipal().setVisible(true));
+    }
+    
+    // ==========================================
+    // MÉTODO PARA VALIDAR LA ESTRUCTURA DEL JSON
+    // ==========================================
+    public boolean validarEstructuraJSON(String contenidoJson) {
+        try {
+            JSONObject raiz = new JSONObject(contenidoJson);
+            Directory directory = new Directory (raiz.getString("test_id")); 
+            raiz.getInt("initial_head");                                                    //Inicio del cabezal
+            JSONObject systemFiles = raiz.getJSONObject("system_files");
+            Iterator<String> keys = systemFiles.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                JSONObject fileData = systemFiles.getJSONObject(key);
+                File tempFile = new File (fileData.getInt("blocks"),directory.getFiles(),null);
+            }          
+            JSONArray requests = raiz.getJSONArray("requests");
+            for (int i = 0; i < requests.length(); i++) {
+                JSONObject request = requests.getJSONObject(i);
+                request.getInt("pos"); 
+                request.getString("op"); 
+            }
+            return true;
+        } catch (JSONException e) {
+            System.out.println("Error de validación: " + e.getMessage());
+            return false;
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
