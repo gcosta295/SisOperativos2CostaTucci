@@ -43,11 +43,11 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private int header;
     private String mode;
     private Queue log;
+
+    private int cicloActual = 0;
+
     private boolean simularFalloProximo = false;
 
-    /**
-     * Creates new form JFramePrincipal
-     */
     public JFramePrincipal() throws Exception {
         initComponents();
         txtCabezalInicial.setEditable(false);
@@ -66,9 +66,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
         iniciarDatosDePrueba();
     }
 
-// ==========================================
-// 1. GENERADOR DE COLORES ALEATORIOS
-// ==========================================
     private Color obtenerColorAleatorio() {
         // Generamos valores entre 0.2 y 0.8 
         // Esto evita el negro total (0.0) y el blanco total (1.0)
@@ -80,9 +77,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         return new Color(r, g, b).brighter();
     }
 
-// ==========================================
     // MÉTODO PARA PREPARAR LA TABLA DE ASIGNACIÓN
-    // ==========================================
     private DefaultTableModel modeloTabla;
 
     private void configurarTablaAsignacion() {
@@ -170,7 +165,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         comboPolitica = new javax.swing.JComboBox<>();
         crear = new javax.swing.JButton();
         eliminar = new javax.swing.JButton();
-        eliminar1 = new javax.swing.JButton();
+        botonLeer = new javax.swing.JButton();
         crear1 = new javax.swing.JButton();
         update = new javax.swing.JButton();
         Json = new javax.swing.JButton();
@@ -183,15 +178,16 @@ public class JFramePrincipal extends javax.swing.JFrame {
         jLabel4 = new javax.swing.JLabel();
         jPanel2 = new javax.swing.JPanel();
         jLabel5 = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        jTextArea2 = new javax.swing.JTextArea();
         jScrollPane3 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
-        jLabel6 = new javax.swing.JLabel();
         jTabbedPane2 = new javax.swing.JTabbedPane();
         panelContenedorDisco = new javax.swing.JPanel();
         jScrollPane5 = new javax.swing.JScrollPane();
         tablaAsignacion = new javax.swing.JTable();
+        jPanel3 = new javax.swing.JPanel();
+        jLabel6 = new javax.swing.JLabel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        txtLogEventos = new javax.swing.JTextArea();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -230,8 +226,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
         eliminar.setText("Eliminar");
         eliminar.addActionListener(this::eliminarActionPerformed);
 
-        eliminar1.setText("Leer");
-        eliminar1.addActionListener(this::eliminar1ActionPerformed);
+        botonLeer.setText("Leer");
+        botonLeer.addActionListener(this::botonLeerActionPerformed);
 
         crear1.setText("Crear Directorio");
         crear1.addActionListener(this::crear1ActionPerformed);
@@ -284,7 +280,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addComponent(eliminar)
                                         .addGap(18, 18, 18)
-                                        .addComponent(eliminar1)
+                                        .addComponent(botonLeer)
                                         .addGap(18, 18, 18)
                                         .addComponent(update)
                                         .addGap(18, 18, 18)
@@ -292,13 +288,11 @@ public class JFramePrincipal extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addGroup(PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                             .addComponent(botonFallo)
-                                            .addComponent(botonPrueba))))))))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                             .addComponent(botonPrueba)))))))
                     .addGroup(PanelControlesLayout.createSequentialGroup()
                         .addGap(488, 488, 488)
                         .addComponent(txtCabezalInicial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(54, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         PanelControlesLayout.setVerticalGroup(
             PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -316,7 +310,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
                         .addComponent(jadminisrtador1)
                         .addComponent(crear)
                         .addComponent(eliminar)
-                        .addComponent(eliminar1)
+                        .addComponent(botonLeer)
                         .addComponent(crear1)
                         .addComponent(update)
                         .addComponent(Json)
@@ -351,7 +345,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
                     .addComponent(jScrollPane1)
                     .addGroup(paneArbolLayout.createSequentialGroup()
                         .addComponent(jLabel4)
-                        .addGap(0, 321, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         paneArbolLayout.setVerticalGroup(
@@ -360,33 +354,19 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 .addContainerGap()
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 437, Short.MAX_VALUE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 305, Short.MAX_VALUE)
                 .addContainerGap())
         );
 
         jPanel2.setBackground(new java.awt.Color(255, 153, 153));
 
         jLabel5.setBackground(new java.awt.Color(255, 255, 255));
-        jLabel5.setText("Cola de Procesos");
+        jLabel5.setText("Journal");
         jLabel5.setOpaque(true);
-
-        jScrollPane2.addComponentListener(new java.awt.event.ComponentAdapter() {
-            public void componentShown(java.awt.event.ComponentEvent evt) {
-                jScrollPane2ComponentShown(evt);
-            }
-        });
-
-        jTextArea2.setColumns(20);
-        jTextArea2.setRows(5);
-        jScrollPane2.setViewportView(jTextArea2);
 
         jTextArea1.setColumns(20);
         jTextArea1.setRows(5);
         jScrollPane3.setViewportView(jTextArea1);
-
-        jLabel6.setBackground(new java.awt.Color(255, 255, 255));
-        jLabel6.setText("Log de eventos");
-        jLabel6.setOpaque(true);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -395,27 +375,18 @@ public class JFramePrincipal extends javax.swing.JFrame {
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 529, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel6))
-                .addGap(18, 18, 18)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabel5)
-                        .addGap(0, 0, Short.MAX_VALUE))
-                    .addComponent(jScrollPane3))
-                .addContainerGap())
+                        .addGap(0, 0, Short.MAX_VALUE))))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(jLabel6)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE))
+                .addComponent(jScrollPane3)
                 .addContainerGap())
         );
 
@@ -439,17 +410,55 @@ public class JFramePrincipal extends javax.swing.JFrame {
 
         jTabbedPane2.addTab("Tabla de Asignacion", jScrollPane5);
 
+        jLabel6.setBackground(new java.awt.Color(255, 255, 255));
+        jLabel6.setText("Log de Eventos");
+        jLabel6.setOpaque(true);
+
+        jScrollPane2.addComponentListener(new java.awt.event.ComponentAdapter() {
+            public void componentShown(java.awt.event.ComponentEvent evt) {
+                jScrollPane2ComponentShown(evt);
+            }
+        });
+
+        txtLogEventos.setColumns(20);
+        txtLogEventos.setRows(5);
+        jScrollPane2.setViewportView(txtLogEventos);
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(10, Short.MAX_VALUE)
+                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jLabel6)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 418, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(14, 14, 14))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addContainerGap(16, Short.MAX_VALUE)
+                .addComponent(jLabel6)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 274, javax.swing.GroupLayout.PREFERRED_SIZE))
+        );
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(PanelControles, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(paneArbol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jTabbedPane2)
-                .addGap(18, 18, 18))
-            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(paneArbol, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(18, 18, 18)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jTabbedPane2)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -458,10 +467,14 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 .addComponent(PanelControles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jTabbedPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(paneArbol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(paneArbol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jTabbedPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
         getContentPane().add(jPanel1, java.awt.BorderLayout.CENTER);
@@ -484,217 +497,268 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jadminisrtador1ActionPerformed
 
     private void crearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearActionPerformed
-    // 1. Validaciones de Administrador y Selección (Tu código base)
-    if (!jadminisrtador1.isSelected()) {
-        JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-    if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
-        JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
-        return;
-    }
 
-    Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
-    String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
-    if (nombre == null || nombre.trim().isEmpty()) return;
-
-    String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
-    if (bloquesStr == null) return;
-
-    // Declaramos el archivo fuera del try para poder acceder a él en el catch
-    File nuevoFile = null; 
-
-    try {
-        int tamano = Integer.parseInt(bloquesStr);
-        Color colorNuevo = obtenerColorAleatorio();
-        
-        // --- A. RESERVA LÓGICA ---
-        // Aquí miDisco saca los bloques de la cola de libres.
-        nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo, log);
-
-        // ============================================================
-        // B. SIMULACIÓN DE FALLO (Ajustada a tu petición)
-        // ============================================================
-        if (this.simularFalloProximo) {
-            this.simularFalloProximo = false; 
-            botonFallo.setBackground(null);
-            botonFallo.setText("Simular Fallo");
-            
-            // Lanzamos el fallo ANTES de pintar y ANTES de registrar en el árbol.
-            // Esto garantiza que el display no cambie.
-            throw new Exception("FALLO_SIMULADO"); 
+        if (!jadminisrtador1.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-        // ============================================================
-
-        // C. OPERACIÓN SEGURA Y COMMIT
-        Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
-
-        if (resultado.success) {
-            nuevoFile.setName(nombre.trim());
-            dirPadre.addFile(nuevoFile);
-            
-            // Actualizar JTree
-            DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
-            DefaultMutableTreeNode nuevoNodo = new DefaultMutableTreeNode(nuevoFile);
-            modeloArbol.insertNodeInto(nuevoNodo, nodoSeleccionado, nodoSeleccionado.getChildCount());
-            
-            // Actualizar Tabla
-            modeloTabla.addRow(new Object[]{ nuevoFile.getName(), tamano, nuevoFile.getFirstBlock().getId(), colorNuevo });
-
-            // ACTUALIZAR DISPLAY VISUAL (Solo ocurre si no hubo fallo)
-            Block bloqueActual = nuevoFile.getFirstBlock();
-            while (bloqueActual != null) {
-                miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), colorNuevo);
-                bloqueActual = bloqueActual.getNext();
-            }
-            panelContenedorDisco.repaint();
-            JOptionPane.showMessageDialog(this, "Archivo creado exitosamente.");
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+        if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
+            return;
         }
 
-    } catch (Exception e) {
-        if ("FALLO_SIMULADO".equals(e.getMessage())) {
-            // --- D. RECUPERACIÓN (ROLLBACK) ---
-            // Como el fallo ocurrió, devolvemos los bloques a la cola de libres 
-            // para que no se queden "ocupados" u huérfanos.
-            if (nuevoFile != null) {
-                liberarArchivoVisualYTabla(nuevoFile); 
-            }
-            
-            JOptionPane.showMessageDialog(this, 
-                "Fallo de Sistema: Operación cancelada.\nLos bloques han sido liberados y no se alteró el disco.", 
-                "Journal Rollback", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
+        String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return;
         }
-    }
-    }//GEN-LAST:event_crearActionPerformed
 
-    private void eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminarActionPerformed
-    if (!jadminisrtador1.isSelected()) {
-        JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
+        String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
+        if (bloquesStr == null) {
+            return;
+        }
 
-    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-    if (nodoSeleccionado == null) {
-        JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta en el árbol para eliminar.");
-        return;
-    }
+        File nuevoFile = null;
 
-    if (nodoSeleccionado.isRoot()) {
-        JOptionPane.showMessageDialog(this, "No se puede eliminar la raíz del disco duro.");
-        return;
-    }
-
-    int confirmacion = JOptionPane.showConfirmDialog(this,
-            "¿Está seguro de que desea eliminar '" + nodoSeleccionado.toString() + "' y todo su contenido?",
-            "Confirmar Eliminación",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.WARNING_MESSAGE);
-
-    if (confirmacion == JOptionPane.YES_OPTION) {
         try {
-            // ============================================================
-            // SIMULACIÓN DE FALLO (Para eliminación)
-            // ============================================================
+            int tamano = Integer.parseInt(bloquesStr);
+            Color colorNuevo = obtenerColorAleatorio();
+
+            // LOG: Inicio de operación
+            cicloActual++;
+            agregarEventoLog("Intentando crear archivo '" + nombre.trim() + "' (" + tamano + " bloques)...");
+
+            nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo, log);
+
+            // SIMULACIÓN DE FALLO
             if (this.simularFalloProximo) {
-                this.simularFalloProximo = false; // Resetear flag
+                this.simularFalloProximo = false;
                 botonFallo.setBackground(null);
                 botonFallo.setText("Simular Fallo");
-
-                // Lanzamos el error ANTES de tocar nada.
-                // Al lanzarlo aquí, no se llama a eliminarNodoRecursivo,
-                // por lo tanto los bloques NO se liberan y el JTree NO cambia.
-                throw new Exception("FALLO_SIMULADO_ELIMINAR");
+                throw new Exception("FALLO_SIMULADO");
             }
-            // ============================================================
 
-            // Si no hay fallo, procedemos con la eliminación real (COMMIT)
-            eliminarNodoRecursivo(nodoSeleccionado); 
-            
-            DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
-            modeloArbol.removeNodeFromParent(nodoSeleccionado);
-            
-            panelContenedorDisco.repaint();
-            JOptionPane.showMessageDialog(this, "Eliminado exitosamente y bloques liberados.");
+            Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
+
+            if (resultado.success) {
+                nuevoFile.setName(nombre.trim());
+                dirPadre.addFile(nuevoFile);
+
+                DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+                DefaultMutableTreeNode nuevoNodo = new DefaultMutableTreeNode(nuevoFile);
+                modeloArbol.insertNodeInto(nuevoNodo, nodoSeleccionado, nodoSeleccionado.getChildCount());
+
+                modeloTabla.addRow(new Object[]{nuevoFile.getName(), tamano, nuevoFile.getFirstBlock().getId(), colorNuevo});
+
+                Block bloqueActual = nuevoFile.getFirstBlock();
+                while (bloqueActual != null) {
+                    miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), colorNuevo);
+                    bloqueActual = bloqueActual.getNext();
+                }
+                panelContenedorDisco.repaint();
+
+                // LOG: Éxito
+                cicloActual++;
+                agregarEventoLog("COMMIT: Archivo '" + nuevoFile.getName() + "' creado exitosamente.");
+
+                JOptionPane.showMessageDialog(this, "Archivo creado exitosamente.");
+            }
 
         } catch (Exception e) {
-            if ("FALLO_SIMULADO_ELIMINAR".equals(e.getMessage())) {
-                JOptionPane.showMessageDialog(this, 
-                    "Fallo de Sistema: La eliminación fue interrumpida.\nNo se realizaron cambios en el disco ni en el índice.", 
-                    "Journal Rollback", JOptionPane.WARNING_MESSAGE);
+            cicloActual++;
+            if ("FALLO_SIMULADO".equals(e.getMessage())) {
+                if (nuevoFile != null) {
+                    liberarArchivoVisualYTabla(nuevoFile);
+                }
+
+                // LOG: Rollback
+                agregarEventoLog("ROLLBACK: Fallo detectado. Bloques liberados. Disco intacto.");
+
+                JOptionPane.showMessageDialog(this, "Fallo de Sistema: Operación cancelada.\nLos bloques han sido liberados.", "Journal Rollback", JOptionPane.INFORMATION_MESSAGE);
             } else {
+                agregarEventoLog("ERROR: " + e.getMessage());
                 JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
             }
         }
-    }
+    }//GEN-LAST:event_crearActionPerformed
+
+    private void eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminarActionPerformed
+        if (!jadminisrtador1.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+        if (nodoSeleccionado == null) {
+            JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta en el árbol para eliminar.");
+            return;
+        }
+        if (nodoSeleccionado.isRoot()) {
+            JOptionPane.showMessageDialog(this, "No se puede eliminar la raíz del disco duro.");
+            return;
+        }
+
+        String nombreBorrar = nodoSeleccionado.toString();
+        int confirmacion = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar '" + nombreBorrar + "'?", "Confirmar", JOptionPane.YES_NO_OPTION);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            try {
+                // LOG: Inicio
+                cicloActual++;
+                agregarEventoLog("Iniciando eliminación de '" + nombreBorrar + "'...");
+
+                if (this.simularFalloProximo) {
+                    this.simularFalloProximo = false;
+                    botonFallo.setBackground(null);
+                    botonFallo.setText("Simular Fallo");
+                    throw new Exception("FALLO_SIMULADO_ELIMINAR");
+                }
+
+                eliminarNodoRecursivo(nodoSeleccionado);
+                DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+                modeloArbol.removeNodeFromParent(nodoSeleccionado);
+                panelContenedorDisco.repaint();
+
+                // LOG: Éxito
+                cicloActual++;
+                agregarEventoLog("COMMIT: '" + nombreBorrar + "' eliminado. Espacio liberado.");
+
+                JOptionPane.showMessageDialog(this, "Eliminado exitosamente.");
+
+            } catch (Exception e) {
+                cicloActual++;
+                if ("FALLO_SIMULADO_ELIMINAR".equals(e.getMessage())) {
+                    agregarEventoLog("ROLLBACK: Interrupción en borrado. No se alteró el índice.");
+                    JOptionPane.showMessageDialog(this, "Fallo de Sistema: Eliminación interrumpida.", "Journal Rollback", JOptionPane.WARNING_MESSAGE);
+                } else {
+                    agregarEventoLog("ERROR: " + e.getMessage());
+                }
+            }
+        }
     }//GEN-LAST:event_eliminarActionPerformed
 
-    private void eliminar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminar1ActionPerformed
+    private void botonLeerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonLeerActionPerformed
 
-    }//GEN-LAST:event_eliminar1ActionPerformed
+    }//GEN-LAST:event_botonLeerActionPerformed
 
     private void crear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crear1ActionPerformed
-    // 1. Validaciones de Administrador
-    if (!jadminisrtador1.isSelected()) {
-        JOptionPane.showMessageDialog(this, "Acceso Denegado: Solo el Administrador puede crear directorios.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
-        return;
-    }
-
-    // 2. Obtener y validar el nodo seleccionado
-    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-    if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
-        JOptionPane.showMessageDialog(this, "Por favor, seleccione una carpeta válida en el árbol.");
-        return;
-    }
-
-    Directory carpetaPadre = (Directory) nodoSeleccionado.getUserObject();
-
-    // 3. Pedir el nombre
-    String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo directorio:");
-    if (nombre == null || nombre.trim().isEmpty()) return;
-
-    try {
-        // --- A. PREPARACIÓN LÓGICA ---
-        Directory nuevaCarpeta = new Directory(nombre.trim());
-
-        // ============================================================
-        // B. SIMULACIÓN DE FALLO
-        // ============================================================
-        if (this.simularFalloProximo) {
-            this.simularFalloProximo = false; // Resetear flag
-            botonFallo.setBackground(null);
-            botonFallo.setText("Simular Fallo");
-
-            // Lanzamos el error ANTES de añadirlo a la carpeta padre 
-            // y ANTES de refrescar el JTree.
-            throw new Exception("FALLO_SISTEMA_DIRECTORIO");
+        if (!jadminisrtador1.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Acceso Denegado.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
         }
-        // ============================================================
 
-        // --- C. COMMIT (Si no hay fallo) ---
-        carpetaPadre.addDirectory(nuevaCarpeta);
-
-        // Refrescar el JTree
-        DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
-        DefaultMutableTreeNode raizNodo = (DefaultMutableTreeNode) modelo.getRoot();
-        refrescarArbolUI((Directory) raizNodo.getUserObject());
-
-        JOptionPane.showMessageDialog(this, "Directorio '" + nombre + "' creado exitosamente.");
-
-    } catch (Exception e) {
-        if ("FALLO_SISTEMA_DIRECTORIO".equals(e.getMessage())) {
-            JOptionPane.showMessageDialog(this, 
-                "Fallo detectado: Error al escribir en la tabla de directorios.\nLa operación ha sido abortada.", 
-                "Journal Rollback", JOptionPane.ERROR_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+        if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
+            JOptionPane.showMessageDialog(this, "Seleccione una carpeta válida.");
+            return;
         }
-    }
+
+        Directory carpetaPadre = (Directory) nodoSeleccionado.getUserObject();
+        String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo directorio:");
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return;
+        }
+
+        try {
+            cicloActual++;
+            agregarEventoLog("Creando directorio '" + nombre.trim() + "'...");
+
+            if (this.simularFalloProximo) {
+                this.simularFalloProximo = false;
+                botonFallo.setBackground(null);
+                botonFallo.setText("Simular Fallo");
+                throw new Exception("FALLO_SISTEMA_DIRECTORIO");
+            }
+
+            Directory nuevaCarpeta = new Directory(nombre.trim());
+            carpetaPadre.addDirectory(nuevaCarpeta);
+
+            DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
+            refrescarArbolUI((Directory) ((DefaultMutableTreeNode) modelo.getRoot()).getUserObject());
+
+            agregarEventoLog("COMMIT: Directorio '" + nombre.trim() + "' añadido al índice.");
+            JOptionPane.showMessageDialog(this, "Directorio creado exitosamente.");
+
+        } catch (Exception e) {
+            cicloActual++;
+            if ("FALLO_SISTEMA_DIRECTORIO".equals(e.getMessage())) {
+                agregarEventoLog("ROLLBACK: Error de escritura en tabla de directorios.");
+                JOptionPane.showMessageDialog(this, "Fallo detectado: Operación abortada.", "Journal Rollback", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }//GEN-LAST:event_crear1ActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
+        if (!jadminisrtador1.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Acceso Denegado: Use el modo Administrador.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+        if (nodoSeleccionado == null) {
+            JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta para renombrar.");
+            return;
+        }
+
+        Object objeto = nodoSeleccionado.getUserObject();
+        String nombreAnterior = objeto.toString();
+
+        String nuevoNombre = JOptionPane.showInputDialog(this, "Ingrese el nuevo nombre:", nombreAnterior);
+
+        if (nuevoNombre != null && !nuevoNombre.trim().isEmpty()) {
+            String nombreLimpio = nuevoNombre.trim();
+
+            cicloActual++;
+            agregarEventoLog("Intentando renombrar '" + nombreAnterior + "' a '" + nombreLimpio + "'...");
+
+            // 1. SI ES UN ARCHIVO, ACTUALIZAMOS LÓGICA Y TABLA
+            if (objeto instanceof File) {
+                // Sacamos el nombre real del archivo antes de cambiarlo
+                String nombreViejoReal = ((File) objeto).getName();
+
+                // Actualizamos el objeto
+                ((File) objeto).setName(nombreLimpio);
+
+                // --- EL TRUCO: USAMOS TU VARIABLE 'modeloTabla' DIRECTAMENTE ---
+                boolean encontrado = false;
+                for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+                    String nombreEnTabla = modeloTabla.getValueAt(i, 0).toString();
+
+                    // Comparamos quitando espacios extra por si acaso
+                    if (nombreEnTabla.trim().equals(nombreViejoReal.trim())) {
+                        modeloTabla.setValueAt(nombreLimpio, i, 0); // ¡Forzamos el cambio visual!
+                        agregarEventoLog("TABLA: Fila " + i + " actualizada de " + nombreViejoReal + " a " + nombreLimpio);
+                        encontrado = true;
+                        break;
+                    }
+                }
+
+                if (!encontrado) {
+                    agregarEventoLog("SISTEMA ALERTA: No se encontró el nombre en la tabla para actualizar.");
+                }
+
+                // 2. SI ES UN DIRECTORIO, SOLO ACTUALIZAMOS LÓGICA
+            } else if (objeto instanceof Directory) {
+                ((Directory) objeto).setDirectoryName(nombreLimpio);
+            }
+
+            // 3. ACTUALIZAR EL ÁRBOL
+            DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+            modeloArbol.nodeChanged(nodoSeleccionado);
+
+            // 4. LOG FINAL
+            agregarEventoLog("COMMIT: Renombrado finalizado con éxito.");
+            JOptionPane.showMessageDialog(this, "Nombre actualizado correctamente.");
+        }
+    }//GEN-LAST:event_updateActionPerformed
+    private void txtCabezalInicialKeyTyped(java.awt.event.KeyEvent evt) {
+        char c = evt.getKeyChar();
+        if (!Character.isDigit(c)) {
+            evt.consume();
+        }
+    }
+    private void JsonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_JsonActionPerformed
         if (!jadminisrtador1.isSelected()) {
             JOptionPane.showMessageDialog(this,
                     "Acceso Denegado: Solo el Administrador puede modificar directorios/archivos.",
@@ -702,54 +766,44 @@ public class JFramePrincipal extends javax.swing.JFrame {
                     JOptionPane.ERROR_MESSAGE);
             return;
         }
-        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-
-        if (nodoSeleccionado == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta para renombrar.");
-            return;
-        }
-        Object objeto = nodoSeleccionado.getUserObject();
-        String nombreActual = objeto.toString();
-
-        // 3. Pedir el nuevo nombre
-        String nuevoNombre = JOptionPane.showInputDialog(this, "Ingrese el nuevo nombre:", nombreActual);
-
-        if (nuevoNombre != null && !nuevoNombre.trim().isEmpty()) {
-            // 4. Actualizar la lógica según el tipo de objeto
-            if (objeto instanceof File) {
-                ((File) objeto).setName(nuevoNombre.trim());
-            } else if (objeto instanceof Directory) {
-                ((Directory) objeto).setDirectoryName(nuevoNombre.trim());
-            }
-
-            // 5. Refrescar visualmente el árbol sin perder la estructura
-            DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
-            modelo.nodeChanged(nodoSeleccionado);
-
-            JOptionPane.showMessageDialog(this, "Nombre actualizado correctamente.");
-        }
-    }//GEN-LAST:event_updateActionPerformed
-
-    private void JsonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_JsonActionPerformed
         JFileChooser fileChooser = new JFileChooser();
         FileNameExtensionFilter filtro = new FileNameExtensionFilter("Archivos JSON", "json");
         fileChooser.setFileFilter(filtro);
+
         int seleccion = fileChooser.showOpenDialog(this);
+
         if (seleccion == JFileChooser.APPROVE_OPTION) {
             java.io.File archivo = fileChooser.getSelectedFile();
+
             try {
+                // Leer el contenido del archivo
                 String contenidoJson = new String(Files.readAllBytes(Paths.get(archivo.getAbsolutePath())));
 
-                // Esta función ahora hace TODO: valida, crea y llena la tabla visualmente.
+                // LOG: Registrar intento de lectura
+                cicloActual++;
+                agregarEventoLog("SISTEMA: Leyendo archivo de configuración '" + archivo.getName() + "'...");
+
+                // Validar la estructura y cargar datos
                 boolean esValido = validarEstructuraJSON(contenidoJson);
 
                 if (esValido) {
-                    // Solo mostramos el mensaje, ¡ya no borramos la tabla!
+                    // LOG: Éxito en la carga
+                    cicloActual++;
+                    agregarEventoLog("SISTEMA: Estructura de archivos cargada y validada correctamente.");
+
                     JOptionPane.showMessageDialog(this, "Archivo JSON leído y validado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    JOptionPane.showMessageDialog(this, "El archivo JSON no tiene la estructura correcta (faltan campos o hay tipos de datos incorrectos).", "Error de Formato", JOptionPane.WARNING_MESSAGE);
+                    // LOG: Fallo por formato
+                    cicloActual++;
+                    agregarEventoLog("ERROR: El archivo JSON no cumple con el formato requerido.");
+
+                    JOptionPane.showMessageDialog(this, "El archivo JSON no tiene la estructura correcta.", "Error de Formato", JOptionPane.WARNING_MESSAGE);
                 }
             } catch (Exception e) {
+                // LOG: Error crítico
+                cicloActual++;
+                agregarEventoLog("ERROR CRÍTICO: No se pudo leer el archivo JSON: " + e.getMessage());
+
                 JOptionPane.showMessageDialog(this, "Error al leer el archivo:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -772,25 +826,19 @@ public class JFramePrincipal extends javax.swing.JFrame {
             return;
         }
 
-        // ==========================================
-        // 2. ¡NUEVO! LEER EL CABEZAL DESDE LA INTERFAZ
-        // ==========================================
+        // 2. Leer el cabezal inicial desde el campo de texto (con validación de errores)
         int cabezalInicial = 0;
         try {
-            // Asegúrate de que el nombre coincida con tu JTextField
+            // Lee el texto, le quita espacios y lo convierte a número
             cabezalInicial = Integer.parseInt(txtCabezalInicial.getText().trim());
-
-            // Actualizamos también el modelo interno para que todo esté sincronizado
+            // Actualizamos el modelo interno para que el planificador sepa dónde empezar
             miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
-
         } catch (NumberFormatException e) {
-            // Si el usuario dejó el cuadro vacío o escribió letras, mostramos un error y detenemos el proceso
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor, ingresa un número válido para la posición inicial del cabezal.", "Error de entrada", javax.swing.JOptionPane.ERROR_MESSAGE);
-            return;
+            return; // Detenemos la ejecución si no hay un número válido
         }
-        // ==========================================
 
-        // 3. Obtenemos el tamaño y las peticiones
+        // 3. Obtenemos el tamaño y las peticiones recorriendo la lista enlazada
         int cantidadPeticiones = generalRequests.getQueuesize();
         int[] peticiones = new int[cantidadPeticiones];
 
@@ -806,42 +854,63 @@ public class JFramePrincipal extends javax.swing.JFrame {
         // 4. Leer la política seleccionada del JComboBox
         String politica = comboPolitica.getSelectedItem().toString();
 
-        // 5. Calculamos la secuencia pasándole el cabezal arbitrario
+        // 5. Calculamos la secuencia de saltos usando tu función matemática
         int[] secuencia = calcularSecuencia(politica, peticiones, cabezalInicial);
 
-        // 6. Animación del panel visual
+        // 6. Preparar el Log de Eventos para una nueva simulación
+        cicloActual = 0;
+        txtLogEventos.setText(""); // Limpiamos la pantalla negra de logs anteriores
+        agregarEventoLog("Iniciando simulación. Política: " + politica + " | Cabezal inicial: " + cabezalInicial);
+
+        // 7. Animación del panel visual
         javax.swing.Timer timerAnimacion = new javax.swing.Timer(500, new java.awt.event.ActionListener() {
             int pasoActual = 0;
 
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
+                // Si llegamos al final del arreglo o a un espacio vacío (-1), nos detenemos
                 if (pasoActual >= secuencia.length || secuencia[pasoActual] == -1) {
-                    ((javax.swing.Timer) e.getSource()).stop();
+                    ((javax.swing.Timer) e.getSource()).stop(); // Apagamos el reloj
+
+                    // Registramos en el log que terminamos
+                    cicloActual++;
+                    agregarEventoLog("¡Simulación finalizada exitosamente!");
+
+                    // Mostramos el mensaje final emergente
                     javax.swing.JOptionPane.showMessageDialog(null, "¡Simulación finalizada con política " + politica + "!");
                     return;
                 }
 
+                // Obtenemos la pista a la que toca saltar
                 int pistaDestino = secuencia[pasoActual];
+
+                // Movemos el cuadro visual
                 miDisco.getVistaDisco().moverCabezalVisual(pistaDestino);
+
+                // Registramos el movimiento en nuestro cuadro de texto (Log)
+                cicloActual++;
+                agregarEventoLog("Ejecutando I/O: Moviendo cabezal hacia la pista " + pistaDestino);
+
                 pasoActual++;
             }
         });
 
+        // ¡Arrancamos el reloj para que inicie la magia!
         timerAnimacion.start();
     }//GEN-LAST:event_botonPruebaActionPerformed
 
     private void botonFalloActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonFalloActionPerformed
-    this.simularFalloProximo = !this.simularFalloProximo; // Alterna el estado
-    
-    if (this.simularFalloProximo) {
-        botonFallo.setBackground(Color.RED);
-        botonFallo.setText("FALLO ACTIVO");
-        System.out.println("JOURNAL: El sistema fallará en la próxima escritura.");
-    } else {
-        botonFallo.setBackground(null);
-        botonFallo.setText("Simular Fallo");
-        System.out.println("JOURNAL: Simulación de fallo desactivada.");
-    }        // TODO add your handling code here:
+        this.simularFalloProximo = !this.simularFalloProximo; // Alterna el estado
+
+        if (this.simularFalloProximo) {
+            botonFallo.setBackground(Color.RED);
+            botonFallo.setText("FALLO ACTIVO");
+            System.out.println("JOURNAL: El sistema fallará en la próxima escritura.");
+        } else {
+            botonFallo.setBackground(null);
+            botonFallo.setText("Simular Fallo");
+            System.out.println("JOURNAL: Simulación de fallo desactivada.");
+        }        // TODO add your handling code here:
     }//GEN-LAST:event_botonFalloActionPerformed
 // Método auxiliar para ordenar arreglos (Bubble Sort)
 
@@ -1087,35 +1156,35 @@ public class JFramePrincipal extends javax.swing.JFrame {
             Iterator<String> keys = systemFiles.keys();
 
             while (keys.hasNext()) {
-    String key = keys.next(); // Esta es la posición (ej: "11")
-    int posicionInicial = Integer.parseInt(key); 
-    JSONObject fileData = systemFiles.getJSONObject(key);
-    String nombreArchivo = fileData.getString("name");
-    int cantBloques = fileData.getInt("blocks");
+                String key = keys.next(); // Esta es la posición (ej: "11")
+                int posicionInicial = Integer.parseInt(key);
+                JSONObject fileData = systemFiles.getJSONObject(key);
+                String nombreArchivo = fileData.getString("name");
+                int cantBloques = fileData.getInt("blocks");
 
-    System.out.println("-> Cargando en posición " + posicionInicial + ": " + nombreArchivo);
+                System.out.println("-> Cargando en posición " + posicionInicial + ": " + nombreArchivo);
 
-    Color colorArchivo = obtenerColorAleatorio();
-    
-    // CAMBIO CLAVE: Usamos un nuevo método que crearemos en GestorDisco
-    File tempFile = miDisco.cargarArchivoEnPosicionEspecifica(posicionInicial, cantBloques, "Admin", colorArchivo, log);
+                Color colorArchivo = obtenerColorAleatorio();
 
-    if (tempFile != null) {
-        tempFile.setName(nombreArchivo);
-        directory.addFile(tempFile);
+                // CAMBIO CLAVE: Usamos un nuevo método que crearemos en GestorDisco
+                File tempFile = miDisco.cargarArchivoEnPosicionEspecifica(posicionInicial, cantBloques, "Admin", colorArchivo, log);
 
-        // Pintar visualmente los bloques específicos
-        pintarArchivoEnPanel(tempFile, colorArchivo);
+                if (tempFile != null) {
+                    tempFile.setName(nombreArchivo);
+                    directory.addFile(tempFile);
 
-        int primerBloqueId = tempFile.getFirstBlock().getId();
-        modeloTabla.addRow(new Object[]{
-            tempFile.getName(),
-            cantBloques,
-            primerBloqueId,
-            colorArchivo
-        });
-    }
-}
+                    // Pintar visualmente los bloques específicos
+                    pintarArchivoEnPanel(tempFile, colorArchivo);
+
+                    int primerBloqueId = tempFile.getFirstBlock().getId();
+                    modeloTabla.addRow(new Object[]{
+                        tempFile.getName(),
+                        cantBloques,
+                        primerBloqueId,
+                        colorArchivo
+                    });
+                }
+            }
 
             JSONArray requests = raiz.getJSONArray("requests");
             System.out.println("3. Cargando " + requests.length() + " peticiones...");
@@ -1179,90 +1248,103 @@ public class JFramePrincipal extends javax.swing.JFrame {
         }
     }
 // === MÉTODO PARA RECORRER EL ÁRBOL Y LIBERAR BLOQUES ===
-private void eliminarNodoRecursivo(DefaultMutableTreeNode nodo) throws Exception {
-    Object userObj = nodo.getUserObject();
-    DefaultMutableTreeNode nodoPadre = (DefaultMutableTreeNode) nodo.getParent();
 
-    if (userObj instanceof File) {
-        File archivo = (File) userObj;
-        
-        // 1. Liberamos bloques y tabla (Lo que ya hacíamos)
-        liberarArchivoVisualYTabla(archivo); 
+    private void eliminarNodoRecursivo(DefaultMutableTreeNode nodo) throws Exception {
+        Object userObj = nodo.getUserObject();
+        DefaultMutableTreeNode nodoPadre = (DefaultMutableTreeNode) nodo.getParent();
 
-        // 2. ¡CRÍTICO! Eliminar el archivo de la lista de la CARPETA LÓGICA
-        if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
-            Directory carpetaPadre = (Directory) nodoPadre.getUserObject();
-            // Suponiendo que tu clase Directory tiene un método para quitar archivos
-            carpetaPadre.getFiles().removeFile(archivo); 
-        }
-    } 
-    else if (userObj instanceof Directory) {
-        // Si es carpeta, procesar hijos primero
-        for (int i = nodo.getChildCount() - 1; i >= 0; i--) {
-            eliminarNodoRecursivo((DefaultMutableTreeNode) nodo.getChildAt(i));
-        }
-        
-        // Al final, quitar la subcarpeta de la carpeta padre
-        if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
-            Directory padre = (Directory) nodoPadre.getUserObject();
-            padre.getDirectories().removeDirectory((Directory) userObj);
+        if (userObj instanceof File) {
+            File archivo = (File) userObj;
+
+            // 1. Liberamos bloques y tabla (Lo que ya hacíamos)
+            liberarArchivoVisualYTabla(archivo);
+
+            // 2. ¡CRÍTICO! Eliminar el archivo de la lista de la CARPETA LÓGICA
+            if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
+                Directory carpetaPadre = (Directory) nodoPadre.getUserObject();
+                // Suponiendo que tu clase Directory tiene un método para quitar archivos
+                carpetaPadre.getFiles().removeFile(archivo);
+            }
+        } else if (userObj instanceof Directory) {
+            // Si es carpeta, procesar hijos primero
+            for (int i = nodo.getChildCount() - 1; i >= 0; i--) {
+                eliminarNodoRecursivo((DefaultMutableTreeNode) nodo.getChildAt(i));
+            }
+
+            // Al final, quitar la subcarpeta de la carpeta padre
+            if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
+                Directory padre = (Directory) nodoPadre.getUserObject();
+                padre.getDirectories().removeDirectory((Directory) userObj);
+            }
         }
     }
-}
+
+    public void agregarEventoLog(String mensaje) {
+        // Armamos el mensaje con el formato: [Ciclo X] Mensaje...
+        String linea = "[Ciclo " + cicloActual + "] " + mensaje + "\n";
+
+        // Lo agregamos al área de texto
+        txtLogEventos.append(linea);
+
+        // MAGIA: Hacemos que la barra de desplazamiento baje automáticamente al final
+        txtLogEventos.setCaretPosition(txtLogEventos.getDocument().getLength());
+    }
 
 // === MÉTODO QUE DEVUELVE LOS BLOQUES AL BITMAP (COLA DE LIBRES) ===
-private void liberarArchivoVisualYTabla(File archivo) {
-    Block bloqueActual = archivo.getFirstBlock();
-    if (bloqueActual == null) return;
-
-    while (bloqueActual != null) {
-        Block siguienteSeguro = bloqueActual.getNext();
-
-        // 1. INTERACCIÓN CON EL GESTOR DE DISCO (Vital para la Cola de Libres)
-        // Aquí es donde el GestorDisco recupera el control del bloque
-        if (miDisco.getColaLibres() != null) {
-            // Limpiamos el bloque antes de devolverlo
-            bloqueActual.setNext(null); 
-            
-            // USAR PUSH para que sea el primero en reasignarse
-            miDisco.getColaLibres().pushBlock(bloqueActual); 
-            
-            // 2. ACTUALIZACIÓN VISUAL (A través del gestor o su vista)
-            miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), Color.WHITE);
+    private void liberarArchivoVisualYTabla(File archivo) {
+        Block bloqueActual = archivo.getFirstBlock();
+        if (bloqueActual == null) {
+            return;
         }
 
-        bloqueActual = siguienteSeguro;
-    }
-    
-    archivo.setFirstBlock(null);
+        while (bloqueActual != null) {
+            Block siguienteSeguro = bloqueActual.getNext();
 
-    // 3. LIMPIAR TABLA DE ASIGNACIÓN
-    eliminarFilaDeTabla(archivo.getName());
-}  
-    
+            // 1. INTERACCIÓN CON EL GESTOR DE DISCO (Vital para la Cola de Libres)
+            // Aquí es donde el GestorDisco recupera el control del bloque
+            if (miDisco.getColaLibres() != null) {
+                // Limpiamos el bloque antes de devolverlo
+                bloqueActual.setNext(null);
+
+                // USAR PUSH para que sea el primero en reasignarse
+                miDisco.getColaLibres().pushBlock(bloqueActual);
+
+                // 2. ACTUALIZACIÓN VISUAL (A través del gestor o su vista)
+                miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), Color.WHITE);
+            }
+
+            bloqueActual = siguienteSeguro;
+        }
+
+        archivo.setFirstBlock(null);
+
+        // 3. LIMPIAR TABLA DE ASIGNACIÓN
+        eliminarFilaDeTabla(archivo.getName());
+    }
+
 // === MÉTODO PARA LIMPIAR LA FILA EN LA TABLA DE ASIGNACIÓN ===
-private void eliminarFilaDeTabla(String nombreArchivo) {
-    DefaultTableModel modelo = (DefaultTableModel) tablaAsignacion.getModel();
-    for (int i = 0; i < modelo.getRowCount(); i++) {
-        if (modelo.getValueAt(i, 0).toString().equals(nombreArchivo)) {
-            modelo.removeRow(i);
-            break; 
+    private void eliminarFilaDeTabla(String nombreArchivo) {
+        DefaultTableModel modelo = (DefaultTableModel) tablaAsignacion.getModel();
+        for (int i = 0; i < modelo.getRowCount(); i++) {
+            if (modelo.getValueAt(i, 0).toString().equals(nombreArchivo)) {
+                modelo.removeRow(i);
+                break;
+            }
         }
     }
-}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Json;
     private javax.swing.JPanel PanelControles;
     private javax.swing.JTree arbolDirectorios;
     private javax.swing.JButton botonFallo;
+    private javax.swing.JButton botonLeer;
     private javax.swing.JButton botonPrueba;
     private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JComboBox<String> comboPolitica;
     private javax.swing.JButton crear;
     private javax.swing.JButton crear1;
     private javax.swing.JButton eliminar;
-    private javax.swing.JButton eliminar1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -1271,19 +1353,20 @@ private void eliminarFilaDeTabla(String nombreArchivo) {
     private javax.swing.JLabel jLabel6;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JScrollPane jScrollPane3;
     private javax.swing.JScrollPane jScrollPane5;
     private javax.swing.JTabbedPane jTabbedPane2;
     private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextArea jTextArea2;
     private javax.swing.JRadioButton jadminisrtador1;
     private javax.swing.JRadioButton jusuario;
     private javax.swing.JPanel paneArbol;
     private javax.swing.JPanel panelContenedorDisco;
     private javax.swing.JTable tablaAsignacion;
     private javax.swing.JTextField txtCabezalInicial;
+    private javax.swing.JTextArea txtLogEventos;
     private javax.swing.JButton update;
     // End of variables declaration//GEN-END:variables
 }
