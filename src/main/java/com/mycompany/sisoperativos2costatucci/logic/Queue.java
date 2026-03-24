@@ -238,4 +238,63 @@ public void pushBlock(Block block) {
         }
         
     }
+    
+    // ==========================================
+    // MÉTODOS PARA ELIMINAR ARCHIVOS Y DIRECTORIOS
+    // ==========================================
+
+    /**
+     * Elimina un archivo específico de la lista enlazada de archivos.
+     */
+    public void removeFile(File fileToRemove) {
+        if (this.firstFile == null || fileToRemove == null) return;
+
+        // Caso 1: El archivo a eliminar es el primero de la lista
+        if (this.firstFile == fileToRemove) {
+            this.firstFile = this.firstFile.getNext();
+            fileToRemove.setNext(null); // Aislamiento
+            this.queuesize -= 1;
+            return;
+        }
+
+        // Caso 2: Buscar en el resto de la lista
+        File current = this.firstFile;
+        while (current.getNext() != null) {
+            if (current.getNext() == fileToRemove) {
+                // Saltamos el nodo: El actual apunta al siguiente del que vamos a borrar
+                current.setNext(fileToRemove.getNext());
+                fileToRemove.setNext(null); // Aislamiento
+                this.queuesize -= 1;
+                return;
+            }
+            current = current.getNext();
+        }
+    }
+
+    /**
+     * Elimina un directorio específico de la lista enlazada de directorios.
+     */
+    public void removeDirectory(Directory dirToRemove) {
+        if (this.firstDirectory == null || dirToRemove == null) return;
+
+        // Caso 1: El directorio a eliminar es el primero
+        if (this.firstDirectory == dirToRemove) {
+            this.firstDirectory = this.firstDirectory.getNext();
+            dirToRemove.setNext(null); // Aislamiento
+            this.queuesize -= 1;
+            return;
+        }
+
+        // Caso 2: Buscar en el resto de la lista
+        Directory current = this.firstDirectory;
+        while (current.getNext() != null) {
+            if (current.getNext() == dirToRemove) {
+                current.setNext(dirToRemove.getNext());
+                dirToRemove.setNext(null); // Aislamiento
+                this.queuesize -= 1;
+                return;
+            }
+            current = current.getNext();
+        }
+    }
 }
