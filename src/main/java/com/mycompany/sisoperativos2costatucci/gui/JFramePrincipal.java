@@ -639,7 +639,82 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_eliminarActionPerformed
 
     private void botonLeerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonLeerActionPerformed
+// 1. Validar selección
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
 
+        if (nodoSeleccionado == null) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione un elemento en el árbol.");
+            return;
+        }
+
+        Object objeto = nodoSeleccionado.getUserObject();
+        if (!(objeto instanceof File)) {
+            JOptionPane.showMessageDialog(this, "Solo se pueden leer ARCHIVOS. Seleccione un archivo válido.");
+            return;
+        }
+
+        File archivoLeer = (File) objeto;
+
+        if (archivoLeer.getFirstBlock() == null) {
+            JOptionPane.showMessageDialog(this, "El archivo está vacío (0 bloques).");
+            return;
+        }
+
+        // 2. LOG: Iniciar Lectura
+        cicloActual++;
+        agregarEventoLog("SISTEMA: Iniciando lectura del archivo '" + archivoLeer.getName() + "'...");
+
+        // Deshabilitar el botón temporalmente para que el usuario no le dé varios clics seguidos
+        botonLeer.setEnabled(false);
+
+        // 3. CREAR UN HILO PARA LA ANIMACIÓN (Para no congelar la pantalla)
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Block bloqueActual = archivoLeer.getFirstBlock();
+                int contador = 1;
+
+                while (bloqueActual != null) {
+                    // Variables finales para poder usarlas dentro del update visual
+                    final int idBloque = bloqueActual.getId();
+                    final int numBloque = contador;
+
+                    // Actualizar la interfaz (Log) de forma segura
+                    javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                        @Override
+                        public void run() {
+                            cicloActual++;
+                            agregarEventoLog("-> Leyendo parte " + numBloque + " del archivo (Bloque físico ID: " + idBloque + ")...");
+
+                            // OPCIONAL: Si tuvieras un método para que el bloque parpadee visualmente en el disco, iría aquí.
+                            // miDisco.getVistaDisco().resaltarBloque(idBloque); 
+                        }
+                    });
+
+                    // 4. PAUSA PARA EL EFECTO VISUAL (800 milisegundos)
+                    try {
+                        Thread.sleep(800);
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
+
+                    // Pasar al siguiente bloque
+                    bloqueActual = bloqueActual.getNext();
+                    contador++;
+                }
+
+                // 5. FINALIZAR LECTURA
+                javax.swing.SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        cicloActual++;
+                        agregarEventoLog("COMMIT: Lectura de '" + archivoLeer.getName() + "' completada con éxito.");
+                        botonLeer.setEnabled(true); // Volver a habilitar el botón
+                        JOptionPane.showMessageDialog(null, "Lectura del archivo completada.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+                    }
+                });
+            }
+        }).start(); // ¡Iniciamos el hilo!
     }//GEN-LAST:event_botonLeerActionPerformed
 
     private void crear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crear1ActionPerformed
