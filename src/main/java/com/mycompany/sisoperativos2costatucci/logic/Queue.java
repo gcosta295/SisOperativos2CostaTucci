@@ -306,35 +306,24 @@ public void pushBlock(Block block) {
         if (this.firstBlock == null) {
             return null; // La cola está vacía
         }
-
-        // Caso 1: El bloque buscado es el primero de la lista (la cabeza)
         if (this.firstBlock.getId() == id) {
             Block temp = this.firstBlock;
-            this.firstBlock = this.firstBlock.getNext(); // Movemos el inicio al siguiente
-            temp.setNext(null); // Aislamos el bloque extraído
+            this.firstBlock = this.firstBlock.getNext();
+            temp.setNext(null); 
             this.queuesize -= 1;
             return temp;
         }
-
-        // Caso 2: El bloque está en medio o al final de la lista
         Block actual = this.firstBlock;
-        // Revisamos el "siguiente" de cada nodo para poder saltarlo
         while (actual.getNext() != null) {
             if (actual.getNext().getId() == id) {
                 Block encontrado = actual.getNext();
-                
-                // "Saltamos" el nodo encontrado para desconectarlo de la cadena
                 actual.setNext(encontrado.getNext());
-                
-                // Limpiamos el puntero del bloque extraído para que no arrastre a los demás
                 encontrado.setNext(null);
-                
                 this.queuesize -= 1;
                 return encontrado;
             }
             actual = actual.getNext();
         }
-
-        return null; // Si llegamos aquí, el bloque no estaba en la cola de libres
+        return null; 
     }
 }

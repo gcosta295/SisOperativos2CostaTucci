@@ -182,26 +182,14 @@ public Recovery recuperarDesdeLog(Queue logQueue, Color colorRecup) {
 }
 
 public File cargarArchivoEnPosicionEspecifica(int inicio, int cantidad, String owner, Color color, Queue log) throws Exception {
-    // 1. IMPORTANTE: Pasamos 0 como tamaño al constructor.
-    // Esto evita que el constructor de File asigne bloques automáticamente desde el inicio.
     File nuevoArchivo = new File(0, colaLibres, owner, log);
-    
-    // Asignamos el color para que el objeto lo guarde
     nuevoArchivo.color = color; 
-
     Block anterior = null;
-
-    // 2. Aquí es donde REALMENTE asignamos las posiciones del JSON
     for (int i = 0; i < cantidad; i++) {
         int idBuscado = inicio + i;
-        
-        // Extraemos el bloque específico (ej: el 11, luego el 12...)
         Block bloqueActual = this.colaLibres.extraerBloquePorId(idBuscado);
-        
         if (bloqueActual != null) {
-            // Pintamos en la posición exacta que dice el JSON
             vistaDisco.asignarBloqueVisual(bloqueActual.getId(), color);
-            
             if (i == 0) {
                 nuevoArchivo.setFirstBlock(bloqueActual);
             } else {
