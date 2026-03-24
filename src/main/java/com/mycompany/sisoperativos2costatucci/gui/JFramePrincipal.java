@@ -466,9 +466,39 @@ private Color obtenerColorAleatorio() {
     }//GEN-LAST:event_crear1ActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
-        if (mode=="admin"){
-            
+    if (!jadminisrtador1.isSelected()) {
+        JOptionPane.showMessageDialog(this, 
+            "Acceso Denegado: Solo el Administrador puede modificar directorios/archivos.", 
+            "Error de Permisos", 
+            JOptionPane.ERROR_MESSAGE);
+        return; 
+    }    
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+
+    if (nodoSeleccionado == null) {
+        JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta para renombrar.");
+        return;
+    }
+    Object objeto = nodoSeleccionado.getUserObject();
+    String nombreActual = objeto.toString();
+
+    // 3. Pedir el nuevo nombre
+    String nuevoNombre = JOptionPane.showInputDialog(this, "Ingrese el nuevo nombre:", nombreActual);
+
+    if (nuevoNombre != null && !nuevoNombre.trim().isEmpty()) {
+        // 4. Actualizar la lógica según el tipo de objeto
+        if (objeto instanceof File) {
+            ((File) objeto).setName(nuevoNombre.trim());
+        } else if (objeto instanceof Directory) {
+            ((Directory) objeto).setDirectoryName(nuevoNombre.trim());
         }
+
+        // 5. Refrescar visualmente el árbol sin perder la estructura
+        DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
+        modelo.nodeChanged(nodoSeleccionado); 
+        
+        JOptionPane.showMessageDialog(this, "Nombre actualizado correctamente.");
+    }
     }//GEN-LAST:event_updateActionPerformed
 
     private void JsonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_JsonActionPerformed
