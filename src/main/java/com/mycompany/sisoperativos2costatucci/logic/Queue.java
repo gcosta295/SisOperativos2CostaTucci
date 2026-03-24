@@ -7,6 +7,7 @@ public class Queue {
     private File firstFile;
     private Directory firstDirectory;
     private Request firstRequest;
+    private Row firstRow;
     private String queueName;
     private int queuesize;
 
@@ -27,6 +28,14 @@ public class Queue {
     // ==========================================
     public Block getFirstBlock() {
         return firstBlock;
+    }
+
+    public Request getFirstRequest() {
+        return firstRequest;
+    }
+
+    public Row getFirstRow() {
+        return firstRow;
     }
 
     public void setFirstBlock(Block firstBlock) {
@@ -59,6 +68,14 @@ public class Queue {
 
     public String getQueueName() {
         return queueName;
+    }
+
+    public void setFirstRequest(Request firstRequest) {
+        this.firstRequest = firstRequest;
+    }
+
+    public void setFirstRow(Row firstRow) {
+        this.firstRow = firstRow;
     }
 
     public void setQueueName(String queueName) {
@@ -187,4 +204,16 @@ public class Queue {
     }
     return null; // No se encontró o ya estaba ocupado
 }
+    public void addRow(Row row) {
+        if (this.firstRow == null) {
+            this.firstRow = row;
+        } else {
+            Row tempRow = this.firstRow;
+            while (tempRow.getNextRow()!= null) {
+                tempRow = tempRow.getNextRow();
+            }
+            tempRow.setNextRow(row);
+        }
+        this.queuesize += 1;
+    }
 }

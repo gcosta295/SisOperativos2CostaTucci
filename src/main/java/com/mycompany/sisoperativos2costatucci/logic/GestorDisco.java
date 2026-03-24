@@ -49,21 +49,11 @@ public class GestorDisco {
 
 public File crearArchivo(int size, String owner, Color color) {
     File nuevoArchivo = new File(size, colaLibres, owner);
-
-    // Si el archivo no pudo obtener sus bloques (espacio insuficiente)
-    if (nuevoArchivo.getFirstBlock() == null) {
-        System.out.println("Error: No hay bloques libres suficientes.");
-        return null; // Esto hará que tu JFrame muestre el error al usuario
-    }
-
-    // Si llegó aquí, los bloques ya fueron EXTRAÍDOS de colaLibres
-    // Ahora solo pintamos lo que el archivo ya posee
     Block bloqueActual = nuevoArchivo.getFirstBlock();
     while (bloqueActual != null) {
         vistaDisco.asignarBloqueVisual(bloqueActual.getId(), color);
         bloqueActual = bloqueActual.getNext();
     }
-
     return nuevoArchivo; 
 }
 
@@ -127,5 +117,67 @@ public void reiniciarEstructura() {
     for (int i = 0; i < 181; i++) {
         this.colaLibres.addBlock(new Block(i));
     }
+}
+public Recovery ejecutarOperacionSegura(File archivo, String operacion) {
+    Recovery status = new Recovery();
+    try {
+        if (operacion.equalsIgnoreCase("CREAR")) {
+            // Intento ciego de creación
+            Block aux = archivo.getFirstBlock();
+            while (aux != null) {
+                // Si esto falla (ej. bloque ya ocupado o fuera de rango), salta al catch
+                this.vistaDisco.asignarBloqueVisual(aux.getId(), Color.BLUE);
+                aux = aux.getNext();
+                status.processedCount++;
+            }
+        } else if (operacion.equalsIgnoreCase("ELIMINAR")) {
+            // Intento ciego de eliminación
+            this.eliminarArchivo(archivo); 
+        }
+        status.success = true;
+    } catch (Exception e) {
+        System.out.println("Falla detectada. Iniciando recuperación semiautomática...");
+        // DISPARADOR: Al fallar, ejecutamos la recuperación del log hasta el último punto estable
+        status = iniciarRecuperacionSemiautomatica("Fallo en " + operacion + ": " + e.getMessage());
+    }
+    return status;
+}
+
+private Recovery iniciarRecuperacionSemiautomatica(String causa) {
+    // Aquí usamos la lógica que definimos antes para recorrer el 'log' 
+    // y restaurar la consistencia hasta donde sea posible.
+    Recovery rs = recuperarDesdeLog(this.colaLibres, Color.ORANGE); 
+    rs.errorMessage = causa; // Preservamos la causa del fallo original
+    rs.success = false;      // Marcamos que hubo una falla previa
+    return rs;
+}
+public Recovery recuperarDesdeLog(Queue logQueue, Color colorRecup) {
+    Recovery status = new Recovery();
+    Row actual = logQueue.getFirstRow();
+    
+    try {
+        while (actual != null) {
+            // Operación "Ciega": Intentamos recuperar el bloque del log
+            if (actual.getAfterChange() != null) {
+                Block b = actual.getAfterChange();
+                
+                // IMPORTANTE: Aquí no preguntamos 'if (hayEspacio)'.
+                // Simplemente intentamos pintar y registrar.
+                vistaDisco.asignarBloqueVisual(b.getId(), colorRecup);
+                
+                // Si tu lógica requiere sacar el bloque de la cola de libres:
+                colaLibres.popBlockById(b.getId());
+                
+                status.processedCount++;
+            }
+            actual = actual.getNextRow();
+        }
+        status.success = true;
+    } catch (Exception e) {
+        // Si el disco visual o la memoria fallan, retornamos lo que llevamos
+        status.success = false;
+        status.errorMessage = e.getMessage();
+    }
+    return status;
 }
 }
