@@ -16,9 +16,6 @@ public class PlanificadorDisco {
         this.posicionCabezal = posicion;
     }
 
-    // ==========================================
-    // 1. ALGORITMO FIFO
-    // ==========================================
     public int ejecutarFIFO(Queue peticiones) {
         System.out.println("--- Ejecutando Planificación FIFO ---");
         int operacionesTotales = 0;
@@ -36,9 +33,7 @@ public class PlanificadorDisco {
         return operacionesTotales;
     }
 
-    // ==========================================
-    // 2. ALGORITMO SSTF (El más cercano primero)
-    // ==========================================
+
     public int ejecutarSSTF(Queue peticiones) {
         System.out.println("--- Ejecutando Planificación SSTF ---");
         int operacionesTotales = 0;
@@ -71,9 +66,6 @@ public class PlanificadorDisco {
         return operacionesTotales;
     }
 
-    // ==========================================
-    // 3. ALGORITMO SCAN (Ascensor)
-    // ==========================================
     public int ejecutarSCAN(Queue peticiones, boolean direccionArriba) {
         System.out.println("--- Ejecutando Planificación SCAN (Ascensor) ---");
         int operacionesTotales = 0;
@@ -132,9 +124,6 @@ public class PlanificadorDisco {
         return operacionesTotales;
     }
 
-    // ==========================================
-    // 4. ALGORITMO C-SCAN (Ascensor Circular)
-    // ==========================================
     public int ejecutarCSCAN(Queue peticiones) {
         System.out.println("--- Ejecutando Planificación C-SCAN (Circular) ---");
         int operacionesTotales = 0;
@@ -185,7 +174,6 @@ public class PlanificadorDisco {
         return operacionesTotales;
     }
 
-    // --- MÉTODOS AUXILIARES ---
     private void marcarTodosComoPendientes(Queue peticiones) {
         Block temp = peticiones.getFirstBlock();
         while (temp != null) {
