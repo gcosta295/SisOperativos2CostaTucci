@@ -9,7 +9,9 @@ import com.mycompany.sisoperativos2costatucci.logic.Directory;
 import com.mycompany.sisoperativos2costatucci.logic.File;
 import com.mycompany.sisoperativos2costatucci.logic.GestorDisco;
 import com.mycompany.sisoperativos2costatucci.logic.Queue;
+import com.mycompany.sisoperativos2costatucci.logic.Recovery;
 import com.mycompany.sisoperativos2costatucci.logic.Request;
+import com.mycompany.sisoperativos2costatucci.logic.Row;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import java.awt.Color;
@@ -34,6 +36,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private Queue generalRequests;
     private int header;
     private String mode;
+    private Queue log;
 
     /**
      * Creates new form JFramePrincipal
@@ -43,6 +46,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
         miDisco = new GestorDisco(181, 50);
         header = 0;
         generalRequests = new Queue("Requests");
+        log = new Queue("log");
+        log.addRow(new Row(null,null,true));
         mode = null;
         panelContenedorDisco.setLayout(new java.awt.BorderLayout());
         panelContenedorDisco.removeAll();
@@ -360,51 +365,42 @@ private Color obtenerColorAleatorio() {
             JOptionPane.ERROR_MESSAGE);
         return; 
     }
-
-    // 2. Validar selección en el árbol
     DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
     if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
         JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
         return;
     }
-
     Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
-
-    // 3. Pedir y Validar Nombre
     String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
-    if (nombre == null || nombre.trim().isEmpty()) return; // Cancelado o vacío
-
-    // 4. Pedir y Validar Tamaño (Bloques)
+    if (nombre == null || nombre.trim().isEmpty()) return;
     String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
     if (bloquesStr == null) return;
-
     try {
         int tamano = Integer.parseInt(bloquesStr);
-        if (tamano <= 0) {
-            JOptionPane.showMessageDialog(this, "El tamaño debe ser mayor a 0.");
-            return;
-        }
-
-        // 5. SOLICITAR AL DISCO (Aquí ocurre la magia de la cola de libres)
-        // El disco saca los bloques de 'colaLibres' y los pinta en el panel
+        
+        // 1. Creamos el objeto (esto no toca el disco visual aún)
         File nuevoFile = miDisco.crearArchivo(tamano, "Admin", obtenerColorAleatorio());
-
-        if (nuevoFile != null) {
-            // Seteamos el nombre y lo agregamos a la estructura lógica
-            nuevoFile.setName(nombre.trim());
-            dirPadre.addFile(nuevoFile); 
-
-            // 6. ACTUALIZAR INTERFAZ (Árbol)
-            // Esto asume que tienes un método que reconstruye el TreeModel
-            refrescarArbolUI((Directory) ((DefaultMutableTreeNode)arbolDirectorios.getModel().getRoot()).getUserObject());
-            
-            JOptionPane.showMessageDialog(this, "Archivo '" + nombre + "' creado en los bloques libres del disco.");
+        
+        // 2. Intentamos la operación "segura" que dispara la recuperación si falla
+        Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
+        
+        if (!resultado.success) {
+            JOptionPane.showMessageDialog(this, 
+                "¡FALLA DETECTADA!\n" +
+                "El sistema ha ejecutado una recuperación semiautomática.\n" +
+                "Estado: " + resultado.errorMessage + "\n" +
+                "Bloques restaurados: " + resultado.processedCount,
+                "Recuperación del Sistema", 
+                JOptionPane.WARNING_MESSAGE);
         } else {
-            JOptionPane.showMessageDialog(this, "ERROR: No hay suficiente espacio libre en el disco.");
+            // Si todo salió bien, agregamos al árbol
+            nuevoFile.setName(nombre.trim());
+            dirPadre.addFile(nuevoFile);
+            refrescarArbolUI((Directory) ((DefaultMutableTreeNode)arbolDirectorios.getModel().getRoot()).getUserObject());
         }
-
-    } catch (NumberFormatException e) {
-        JOptionPane.showMessageDialog(this, "Error: Ingrese un número válido para los bloques.");
+        
+    } catch (Exception e) {
+        JOptionPane.showMessageDialog(this, "Error crítico: " + e.getMessage());
     }
 
     }//GEN-LAST:event_crearActionPerformed
