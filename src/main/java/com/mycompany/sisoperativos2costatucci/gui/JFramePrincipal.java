@@ -81,61 +81,39 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private DefaultTableModel modeloTabla;
 
     private void configurarTablaAsignacion() {
-        // 1. Creamos las columnas (sin Propietario)
         String[] columnas = {"Archivo", "Bloques", "Primer Bloque", "Color"};
         modeloTabla = new DefaultTableModel(columnas, 0);
-
-        // 2. Se lo aplicamos a la tabla de NetBeans
         tablaAsignacion.setModel(modeloTabla);
-
-        // 3. Le decimos a la columna 3 (la de Color) que use nuestro pintor especial
         tablaAsignacion.getColumnModel().getColumn(3).setCellRenderer(new ColorRenderer());
     }
-
-// ==========================================
-// 2. MÉTODO RECURSIVO PARA PINTAR EL DISCO
-// ==========================================
-    // ==========================================
-// 2. MÉTODO RECURSIVO PARA PINTAR EL DISCO Y LLENAR LA TABLA
-// ==========================================
+    
+// MÉTODO RECURSIVO PARA PINTAR EL DISCO Y LLENAR LA TABLA
     private void pintarArchivosEnDisco(Directory carpetaLogica, PanelSD panelDisco) {
-
-        // A. Recorrer y procesar los ARCHIVOS de esta carpeta
         if (carpetaLogica.getFiles() != null) {
             File actualArchivo = carpetaLogica.getFiles().getFirstFile();
-
             while (actualArchivo != null) {
                 Color colorArchivo = obtenerColorAleatorio();
                 int cantBloques = 0;
                 int primerBloque = -1;
-
                 Block actualBloque = actualArchivo.getFirstBlock();
-
-                // Guardamos cuál es el primer bloque para la tabla
                 if (actualBloque != null) {
                     primerBloque = actualBloque.getId();
                 }
-
                 while (actualBloque != null) {
                     panelDisco.asignarBloqueVisual(actualBloque.getId(), colorArchivo);
-                    cantBloques++; // Contamos los bloques
+                    cantBloques++; 
                     actualBloque = actualBloque.getNext();
                 }
-
-                // ¡NUEVO! Agregamos los datos de este archivo a la tabla
                 modeloTabla.addRow(new Object[]{
                     actualArchivo.getName(),
                     cantBloques,
                     primerBloque,
-                    colorArchivo // Pasamos el objeto Color directo
+                    colorArchivo 
                 });
                 System.out.println("Fila agregada a la tabla para: " + actualArchivo.getName());
-
                 actualArchivo = actualArchivo.getNext();
             }
         }
-
-        // B. Recorrer las SUBCARPETAS (Magia recursiva)
         if (carpetaLogica.getDirectories() != null) {
             Directory actualDir = carpetaLogica.getDirectories().getFirstDirectory();
             while (actualDir != null) {
@@ -458,7 +436,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jadminisrtador1ActionPerformed
 
     private void crearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearActionPerformed
-
         if (!jadminisrtador1.isSelected()) {
             JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
             return;
@@ -468,74 +445,53 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
             return;
         }
-
         Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
         String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
         if (nombre == null || nombre.trim().isEmpty()) {
             return;
         }
-
         String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
         if (bloquesStr == null) {
             return;
         }
-
         File nuevoFile = null;
-
         try {
             int tamano = Integer.parseInt(bloquesStr);
             Color colorNuevo = obtenerColorAleatorio();
-
-            // LOG: Inicio de operación
             cicloActual++;
             agregarEventoLog("Intentando crear archivo '" + nombre.trim() + "' (" + tamano + " bloques)...");
-
             nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo, log);
-
-            // SIMULACIÓN DE FALLO
             if (this.simularFalloProximo) {
                 this.simularFalloProximo = false;
                 botonFallo.setBackground(null);
                 botonFallo.setText("Simular Fallo");
                 throw new Exception("FALLO_SIMULADO");
             }
-
             Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
-
             if (resultado.success) {
                 nuevoFile.setName(nombre.trim());
                 dirPadre.addFile(nuevoFile);
-
                 DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
                 DefaultMutableTreeNode nuevoNodo = new DefaultMutableTreeNode(nuevoFile);
                 modeloArbol.insertNodeInto(nuevoNodo, nodoSeleccionado, nodoSeleccionado.getChildCount());
-
                 modeloTabla.addRow(new Object[]{nuevoFile.getName(), tamano, nuevoFile.getFirstBlock().getId(), colorNuevo});
-
                 Block bloqueActual = nuevoFile.getFirstBlock();
                 while (bloqueActual != null) {
                     miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), colorNuevo);
                     bloqueActual = bloqueActual.getNext();
                 }
                 panelContenedorDisco.repaint();
-
-                // LOG: Éxito
                 cicloActual++;
                 agregarEventoLog("COMMIT: Archivo '" + nuevoFile.getName() + "' creado exitosamente.");
-
                 JOptionPane.showMessageDialog(this, "Archivo creado exitosamente.");
             }
-
         } catch (Exception e) {
             cicloActual++;
             if ("FALLO_SIMULADO".equals(e.getMessage())) {
                 if (nuevoFile != null) {
                     liberarArchivoVisualYTabla(nuevoFile);
                 }
-
-                // LOG: Rollback
                 agregarEventoLog("ROLLBACK: Fallo detectado. Bloques liberados. Disco intacto.");
-
                 JOptionPane.showMessageDialog(this, "Fallo de Sistema: Operación cancelada.\nLos bloques han sido liberados.", "Journal Rollback", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 agregarEventoLog("ERROR: " + e.getMessage());
@@ -549,7 +505,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
         if (nodoSeleccionado == null) {
             JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta en el árbol para eliminar.");
@@ -559,34 +514,25 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "No se puede eliminar la raíz del disco duro.");
             return;
         }
-
         String nombreBorrar = nodoSeleccionado.toString();
         int confirmacion = JOptionPane.showConfirmDialog(this, "¿Está seguro de eliminar '" + nombreBorrar + "'?", "Confirmar", JOptionPane.YES_NO_OPTION);
-
         if (confirmacion == JOptionPane.YES_OPTION) {
             try {
-                // LOG: Inicio
                 cicloActual++;
                 agregarEventoLog("Iniciando eliminación de '" + nombreBorrar + "'...");
-
                 if (this.simularFalloProximo) {
                     this.simularFalloProximo = false;
                     botonFallo.setBackground(null);
                     botonFallo.setText("Simular Fallo");
                     throw new Exception("FALLO_SIMULADO_ELIMINAR");
                 }
-
                 eliminarNodoRecursivo(nodoSeleccionado);
                 DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
                 modeloArbol.removeNodeFromParent(nodoSeleccionado);
                 panelContenedorDisco.repaint();
-
-                // LOG: Éxito
                 cicloActual++;
                 agregarEventoLog("COMMIT: '" + nombreBorrar + "' eliminado. Espacio liberado.");
-
                 JOptionPane.showMessageDialog(this, "Eliminado exitosamente.");
-
             } catch (Exception e) {
                 cicloActual++;
                 if ("FALLO_SIMULADO_ELIMINAR".equals(e.getMessage())) {
@@ -600,82 +546,58 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_eliminarActionPerformed
 
     private void botonLeerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonLeerActionPerformed
-// 1. Validar selección
-        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-
+    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
         if (nodoSeleccionado == null) {
             JOptionPane.showMessageDialog(this, "Por favor, seleccione un elemento en el árbol.");
             return;
         }
-
         Object objeto = nodoSeleccionado.getUserObject();
         if (!(objeto instanceof File)) {
             JOptionPane.showMessageDialog(this, "Solo se pueden leer ARCHIVOS. Seleccione un archivo válido.");
             return;
         }
-
         File archivoLeer = (File) objeto;
-
         if (archivoLeer.getFirstBlock() == null) {
             JOptionPane.showMessageDialog(this, "El archivo está vacío (0 bloques).");
             return;
         }
-
-        // 2. LOG: Iniciar Lectura
         cicloActual++;
         agregarEventoLog("SISTEMA: Iniciando lectura del archivo '" + archivoLeer.getName() + "'...");
-
-        // Deshabilitar el botón temporalmente para que el usuario no le dé varios clics seguidos
         botonLeer.setEnabled(false);
-
-        // 3. CREAR UN HILO PARA LA ANIMACIÓN (Para no congelar la pantalla)
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Block bloqueActual = archivoLeer.getFirstBlock();
                 int contador = 1;
-
                 while (bloqueActual != null) {
-                    // Variables finales para poder usarlas dentro del update visual
                     final int idBloque = bloqueActual.getId();
                     final int numBloque = contador;
-
-                    // Actualizar la interfaz (Log) de forma segura
                     javax.swing.SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
                             cicloActual++;
                             agregarEventoLog("-> Leyendo parte " + numBloque + " del archivo (Bloque físico ID: " + idBloque + ")...");
-
-                            // OPCIONAL: Si tuvieras un método para que el bloque parpadee visualmente en el disco, iría aquí.
-                            // miDisco.getVistaDisco().resaltarBloque(idBloque); 
                         }
                     });
-
-                    // 4. PAUSA PARA EL EFECTO VISUAL (800 milisegundos)
                     try {
                         Thread.sleep(800);
                     } catch (InterruptedException ex) {
                         ex.printStackTrace();
                     }
-
-                    // Pasar al siguiente bloque
                     bloqueActual = bloqueActual.getNext();
                     contador++;
                 }
-
-                // 5. FINALIZAR LECTURA
                 javax.swing.SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
                         cicloActual++;
                         agregarEventoLog("COMMIT: Lectura de '" + archivoLeer.getName() + "' completada con éxito.");
-                        botonLeer.setEnabled(true); // Volver a habilitar el botón
+                        botonLeer.setEnabled(true); 
                         JOptionPane.showMessageDialog(null, "Lectura del archivo completada.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                     }
                 });
             }
-        }).start(); // ¡Iniciamos el hilo!
+        }).start();
     }//GEN-LAST:event_botonLeerActionPerformed
 
     private void crear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crear1ActionPerformed
