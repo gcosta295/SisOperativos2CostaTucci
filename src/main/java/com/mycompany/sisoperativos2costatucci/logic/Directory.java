@@ -5,13 +5,8 @@ public class Directory {
     private String directoryName;
     private Queue directories;
     private Queue files;
-
-    // Puntero para encadenar carpetas dentro de la Queue
     private Directory next;
 
-    // ==========================================
-    // 1. CONSTRUCTOR
-    // ==========================================
     public Directory(String directoryName) {
         this.directoryName = directoryName;
         this.next = null; // Inicializamos el puntero vacío
@@ -21,10 +16,6 @@ public class Directory {
         this.files = new Queue("Archivos_de_" + directoryName);
     }
 
-    // ==========================================
-    // 2. MÉTODOS PARA AGREGAR CONTENIDO
-    // ==========================================
-    // La carpeta simplemente le "delega" el trabajo a su respectiva cola (Queue)
     public void addDirectory(Directory dir) {
         this.directories.addDirectory(dir);
     }
@@ -33,9 +24,6 @@ public class Directory {
         this.files.addFile(file);
     }
 
-    // ==========================================
-    // 3. GETTERS Y SETTERS
-    // ==========================================
     public String getDirectoryName() {
         return directoryName;
     }
@@ -68,9 +56,6 @@ public class Directory {
         this.next = next;
     }
 
-    // ==========================================
-    // 4. TOSTRING PARA EL JTREE
-    // ==========================================
     @Override
     public String toString() {
         return this.getDirectoryName(); // Para que el JTree pinte el nombre correcto

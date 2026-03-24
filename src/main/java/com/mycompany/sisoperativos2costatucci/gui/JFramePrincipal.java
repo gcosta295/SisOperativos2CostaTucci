@@ -397,7 +397,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
                         .addContainerGap()
                         .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addComponent(paneArbol, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                .addGap(18, 18, 18)
+                .addGap(37, 37, 37)
                 .addComponent(jTabbedPane2))
         );
         jPanel1Layout.setVerticalGroup(

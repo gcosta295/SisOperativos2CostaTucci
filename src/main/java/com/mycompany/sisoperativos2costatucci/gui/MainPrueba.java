@@ -18,45 +18,27 @@ public class MainPrueba extends JFrame {
 
     public MainPrueba() throws Exception {
         initComponents();
-        // Configuración básica de la ventana
         setTitle("Simulador de Disco SD - Prueba Visual");
         setSize(500, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null); // Centrar en pantalla
         setLayout(new BorderLayout());
-
-        // 1. Inicializamos la vista del disco con 100 bloques
         PanelSD vistaDisco = new PanelSD(105);
-        add(vistaDisco); // Agregamos el panel a la ventana
-
-        // 2. Usamos TU clase Queue para los bloques libres (el BitMap)
+        add(vistaDisco); 
         Queue colaLibres = new Queue("BitMap_Libres");
 
         // Llenamos la cola con 100 bloques vacíos (IDs del 0 al 99)
         for (int i = 0; i < 100; i++) {
-            // Recuerda que en pasos anteriores le agregamos el 'id' al constructor de Block
             colaLibres.addBlock(new Block("Vacio", i));
         }
 
-        // 3. ¡Hacemos la prueba! Simulamos la creación de 2 archivos
-        // Archivo 1: Pide 5 bloques
-        // Toma los 5 primeros bloques de colaLibres
         File archivo1 = new File(5, colaLibres, "Admin",colaLibres);
         Color colorArchivo1 = new Color(70, 130, 180); // Azul acero
         pintarArchivoEnDisco(archivo1, vistaDisco, colorArchivo1);
-
-        // Archivo 2: Pide 8 bloques
-        // Toma los siguientes 8 bloques de colaLibres
         File archivo2 = new File(8, colaLibres, "User1",colaLibres);
         Color colorArchivo2 = new Color(60, 179, 113); // Verde
         pintarArchivoEnDisco(archivo2, vistaDisco, colorArchivo2);
-
-        // Imprimimos en consola para verificar que el tamaño de tu cola se restó correctamente
         System.out.println("Bloques libres restantes en la cola: " + colaLibres.getQueuesize());
-        // Debería imprimir 87 (100 - 5 - 8)
-        // --- ELIMINACIÓN SIMULADA ---
-        // Usamos un Timer para esperar 3 segundos (3000 ms) antes de borrar, 
-        // así te da tiempo de ver los bloques pintados en la ventana.
         Timer timer = new Timer(3000, (e) -> {
             System.out.println("\n¡Han pasado 3 segundos! Eliminando Archivo 1 (Azul)...");
             eliminarArchivo(archivo1, colaLibres, vistaDisco);
@@ -78,25 +60,19 @@ public class MainPrueba extends JFrame {
 
     private void eliminarArchivo(File archivo, Queue colaLibres, PanelSD vista) {
         Block bloqueActual = archivo.getFirstBlock();
-
         while (bloqueActual != null) {
             // 1. Guardamos referencia al siguiente bloque antes de romper el enlace
             Block siguiente = bloqueActual.getNext();
-
             // 2. Liberamos en la interfaz gráfica (Pinta de blanco/vacio)
             vista.liberarBloqueVisual(bloqueActual.getId());
-
             // 3. Limpiamos la info del bloque y rompemos su enlace
             bloqueActual.setInfo("Vacio");
             bloqueActual.setNext(null);
-
             // 4. Lo devolvemos a la cola de libres para que se pueda reutilizar
             colaLibres.addBlock(bloqueActual);
-
             // 5. Avanzamos al siguiente bloque del archivo
             bloqueActual = siguiente;
         }
-
         // 6. El archivo ya no tiene bloques ni tamaño
         archivo.setFirstBlock(null);
         archivo.setSizeFile(0);
@@ -142,7 +118,6 @@ public class MainPrueba extends JFrame {
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-
         java.awt.EventQueue.invokeLater(() -> {
             try {
                 System.out.println("Iniciando prueba...");
