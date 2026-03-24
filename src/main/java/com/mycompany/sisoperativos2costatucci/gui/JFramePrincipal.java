@@ -605,39 +605,31 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Acceso Denegado.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
         if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
             JOptionPane.showMessageDialog(this, "Seleccione una carpeta válida.");
             return;
         }
-
         Directory carpetaPadre = (Directory) nodoSeleccionado.getUserObject();
         String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo directorio:");
         if (nombre == null || nombre.trim().isEmpty()) {
             return;
         }
-
         try {
             cicloActual++;
             agregarEventoLog("Creando directorio '" + nombre.trim() + "'...");
-
             if (this.simularFalloProximo) {
                 this.simularFalloProximo = false;
                 botonFallo.setBackground(null);
                 botonFallo.setText("Simular Fallo");
                 throw new Exception("FALLO_SISTEMA_DIRECTORIO");
             }
-
             Directory nuevaCarpeta = new Directory(nombre.trim());
             carpetaPadre.addDirectory(nuevaCarpeta);
-
             DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
             refrescarArbolUI((Directory) ((DefaultMutableTreeNode) modelo.getRoot()).getUserObject());
-
             agregarEventoLog("COMMIT: Directorio '" + nombre.trim() + "' añadido al índice.");
             JOptionPane.showMessageDialog(this, "Directorio creado exitosamente.");
-
         } catch (Exception e) {
             cicloActual++;
             if ("FALLO_SISTEMA_DIRECTORIO".equals(e.getMessage())) {
@@ -652,60 +644,39 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Acceso Denegado: Use el modo Administrador.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
         DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
         if (nodoSeleccionado == null) {
             JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta para renombrar.");
             return;
         }
-
         Object objeto = nodoSeleccionado.getUserObject();
         String nombreAnterior = objeto.toString();
-
         String nuevoNombre = JOptionPane.showInputDialog(this, "Ingrese el nuevo nombre:", nombreAnterior);
-
         if (nuevoNombre != null && !nuevoNombre.trim().isEmpty()) {
             String nombreLimpio = nuevoNombre.trim();
-
             cicloActual++;
             agregarEventoLog("Intentando renombrar '" + nombreAnterior + "' a '" + nombreLimpio + "'...");
-
-            // 1. SI ES UN ARCHIVO, ACTUALIZAMOS LÓGICA Y TABLA
             if (objeto instanceof File) {
-                // Sacamos el nombre real del archivo antes de cambiarlo
                 String nombreViejoReal = ((File) objeto).getName();
-
-                // Actualizamos el objeto
                 ((File) objeto).setName(nombreLimpio);
-
-                // --- EL TRUCO: USAMOS TU VARIABLE 'modeloTabla' DIRECTAMENTE ---
                 boolean encontrado = false;
                 for (int i = 0; i < modeloTabla.getRowCount(); i++) {
                     String nombreEnTabla = modeloTabla.getValueAt(i, 0).toString();
-
-                    // Comparamos quitando espacios extra por si acaso
                     if (nombreEnTabla.trim().equals(nombreViejoReal.trim())) {
-                        modeloTabla.setValueAt(nombreLimpio, i, 0); // ¡Forzamos el cambio visual!
+                        modeloTabla.setValueAt(nombreLimpio, i, 0);
                         agregarEventoLog("TABLA: Fila " + i + " actualizada de " + nombreViejoReal + " a " + nombreLimpio);
                         encontrado = true;
                         break;
                     }
                 }
-
                 if (!encontrado) {
                     agregarEventoLog("SISTEMA ALERTA: No se encontró el nombre en la tabla para actualizar.");
                 }
-
-                // 2. SI ES UN DIRECTORIO, SOLO ACTUALIZAMOS LÓGICA
             } else if (objeto instanceof Directory) {
                 ((Directory) objeto).setDirectoryName(nombreLimpio);
             }
-
-            // 3. ACTUALIZAR EL ÁRBOL
             DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
             modeloArbol.nodeChanged(nodoSeleccionado);
-
-            // 4. LOG FINAL
             agregarEventoLog("COMMIT: Renombrado finalizado con éxito.");
             JOptionPane.showMessageDialog(this, "Nombre actualizado correctamente.");
         }
@@ -727,41 +698,26 @@ public class JFramePrincipal extends javax.swing.JFrame {
         JFileChooser fileChooser = new JFileChooser();
         FileNameExtensionFilter filtro = new FileNameExtensionFilter("Archivos JSON", "json");
         fileChooser.setFileFilter(filtro);
-
         int seleccion = fileChooser.showOpenDialog(this);
-
         if (seleccion == JFileChooser.APPROVE_OPTION) {
             java.io.File archivo = fileChooser.getSelectedFile();
-
             try {
-                // Leer el contenido del archivo
                 String contenidoJson = new String(Files.readAllBytes(Paths.get(archivo.getAbsolutePath())));
-
-                // LOG: Registrar intento de lectura
                 cicloActual++;
                 agregarEventoLog("SISTEMA: Leyendo archivo de configuración '" + archivo.getName() + "'...");
-
-                // Validar la estructura y cargar datos
                 boolean esValido = validarEstructuraJSON(contenidoJson);
-
                 if (esValido) {
-                    // LOG: Éxito en la carga
                     cicloActual++;
                     agregarEventoLog("SISTEMA: Estructura de archivos cargada y validada correctamente.");
-
                     JOptionPane.showMessageDialog(this, "Archivo JSON leído y validado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                    // LOG: Fallo por formato
                     cicloActual++;
                     agregarEventoLog("ERROR: El archivo JSON no cumple con el formato requerido.");
-
                     JOptionPane.showMessageDialog(this, "El archivo JSON no tiene la estructura correcta.", "Error de Formato", JOptionPane.WARNING_MESSAGE);
                 }
             } catch (Exception e) {
-                // LOG: Error crítico
                 cicloActual++;
                 agregarEventoLog("ERROR CRÍTICO: No se pudo leer el archivo JSON: " + e.getMessage());
-
                 JOptionPane.showMessageDialog(this, "Error al leer el archivo:\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         }
@@ -778,88 +734,55 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jScrollPane2ComponentShown
 
     private void botonPruebaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonPruebaActionPerformed
-// 1. Verificamos que la cola exista y tenga elementos
         if (generalRequests == null || generalRequests.getQueuesize() == 0) {
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor, carga un archivo JSON primero.", "Faltan datos", javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
-
-        // 2. Leer el cabezal inicial desde el campo de texto (con validación de errores)
         int cabezalInicial = 0;
         try {
-            // Lee el texto, le quita espacios y lo convierte a número
             cabezalInicial = Integer.parseInt(txtCabezalInicial.getText().trim());
-            // Actualizamos el modelo interno para que el planificador sepa dónde empezar
             miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
         } catch (NumberFormatException e) {
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor, ingresa un número válido para la posición inicial del cabezal.", "Error de entrada", javax.swing.JOptionPane.ERROR_MESSAGE);
-            return; // Detenemos la ejecución si no hay un número válido
+            return; 
         }
-
-        // 3. Obtenemos el tamaño y las peticiones recorriendo la lista enlazada
         int cantidadPeticiones = generalRequests.getQueuesize();
         int[] peticiones = new int[cantidadPeticiones];
-
         Request tempRequest = generalRequests.getFirstRequest();
         int indice = 0;
-
         while (tempRequest != null && indice < cantidadPeticiones) {
             peticiones[indice] = tempRequest.getPos();
             tempRequest = tempRequest.getNextRequest();
             indice++;
         }
-
-        // 4. Leer la política seleccionada del JComboBox
         String politica = comboPolitica.getSelectedItem().toString();
-
-        // 5. Calculamos la secuencia de saltos usando tu función matemática
         int[] secuencia = calcularSecuencia(politica, peticiones, cabezalInicial);
-
-        // 6. Preparar el Log de Eventos para una nueva simulación
         cicloActual = 0;
-        txtLogEventos.setText(""); // Limpiamos la pantalla negra de logs anteriores
+        txtLogEventos.setText(""); 
         agregarEventoLog("Iniciando simulación. Política: " + politica + " | Cabezal inicial: " + cabezalInicial);
-
-        // 7. Animación del panel visual
         javax.swing.Timer timerAnimacion = new javax.swing.Timer(500, new java.awt.event.ActionListener() {
             int pasoActual = 0;
-
             @Override
             public void actionPerformed(java.awt.event.ActionEvent e) {
-                // Si llegamos al final del arreglo o a un espacio vacío (-1), nos detenemos
                 if (pasoActual >= secuencia.length || secuencia[pasoActual] == -1) {
-                    ((javax.swing.Timer) e.getSource()).stop(); // Apagamos el reloj
-
-                    // Registramos en el log que terminamos
+                    ((javax.swing.Timer) e.getSource()).stop(); 
                     cicloActual++;
                     agregarEventoLog("¡Simulación finalizada exitosamente!");
-
-                    // Mostramos el mensaje final emergente
                     javax.swing.JOptionPane.showMessageDialog(null, "¡Simulación finalizada con política " + politica + "!");
                     return;
                 }
-
-                // Obtenemos la pista a la que toca saltar
                 int pistaDestino = secuencia[pasoActual];
-
-                // Movemos el cuadro visual
                 miDisco.getVistaDisco().moverCabezalVisual(pistaDestino);
-
-                // Registramos el movimiento en nuestro cuadro de texto (Log)
                 cicloActual++;
                 agregarEventoLog("Ejecutando I/O: Moviendo cabezal hacia la pista " + pistaDestino);
-
                 pasoActual++;
             }
         });
-
-        // ¡Arrancamos el reloj para que inicie la magia!
         timerAnimacion.start();
     }//GEN-LAST:event_botonPruebaActionPerformed
 
     private void botonFalloActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonFalloActionPerformed
         this.simularFalloProximo = !this.simularFalloProximo; // Alterna el estado
-
         if (this.simularFalloProximo) {
             botonFallo.setBackground(Color.RED);
             botonFallo.setText("FALLO ACTIVO");
@@ -868,10 +791,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
             botonFallo.setBackground(null);
             botonFallo.setText("Simular Fallo");
             System.out.println("JOURNAL: Simulación de fallo desactivada.");
-        }        // TODO add your handling code here:
+        }       
     }//GEN-LAST:event_botonFalloActionPerformed
-// Método auxiliar para ordenar arreglos (Bubble Sort)
-
     private void ordenarArreglo(int[] arr, int n) {
         for (int i = 0; i < n - 1; i++) {
             for (int j = 0; j < n - i - 1; j++) {
@@ -887,32 +808,24 @@ public class JFramePrincipal extends javax.swing.JFrame {
     // Calcula el orden de las pistas usando solo arreglos nativos
     private int[] calcularSecuencia(String politica, int[] peticiones, int cabezalInicial) {
         int n = peticiones.length;
-        // El tamaño máximo será n + 2 (por si SCAN/C-SCAN añaden los extremos 0 y 199)
         int[] secuencia = new int[n + 2];
-
-        // Inicializamos el arreglo con -1 para identificar qué espacios están vacíos
         for (int i = 0; i < secuencia.length; i++) {
             secuencia[i] = -1;
         }
-
         int MAX_PISTA = 199;
         int indiceSecuencia = 0;
-
         switch (politica.toUpperCase()) {
             case "FIFO":
                 for (int i = 0; i < n; i++) {
                     secuencia[indiceSecuencia++] = peticiones[i];
                 }
                 break;
-
             case "SSTF":
                 int posActual = cabezalInicial;
-                boolean[] visitado = new boolean[n]; // Por defecto se inicializa en false
-
+                boolean[] visitado = new boolean[n]; 
                 for (int i = 0; i < n; i++) {
                     int indiceMasCercano = -1;
                     int menorDistancia = Integer.MAX_VALUE;
-
                     for (int j = 0; j < n; j++) {
                         if (!visitado[j]) {
                             int distancia = Math.abs(peticiones[j] - posActual);
@@ -927,69 +840,51 @@ public class JFramePrincipal extends javax.swing.JFrame {
                     posActual = peticiones[indiceMasCercano];
                 }
                 break;
-
             case "SCAN":
-                // Creamos un arreglo con las peticiones + el cabezal
                 int[] tempScan = new int[n + 1];
                 for (int i = 0; i < n; i++) {
                     tempScan[i] = peticiones[i];
                 }
                 tempScan[n] = cabezalInicial;
-
                 ordenarArreglo(tempScan, tempScan.length);
-
-                // Buscamos dónde quedó el cabezal
                 int indexScan = 0;
                 for (int i = 0; i < tempScan.length; i++) {
                     if (tempScan[i] == cabezalInicial) {
                         indexScan = i;
                     }
                 }
-
-                // Hacia arriba
                 for (int i = indexScan + 1; i < tempScan.length; i++) {
                     secuencia[indiceSecuencia++] = tempScan[i];
                 }
-                // Toca el final
                 if (indiceSecuencia == 0 || secuencia[indiceSecuencia - 1] != MAX_PISTA) {
                     secuencia[indiceSecuencia++] = MAX_PISTA;
                 }
-                // Hacia abajo
                 for (int i = indexScan - 1; i >= 0; i--) {
                     secuencia[indiceSecuencia++] = tempScan[i];
                 }
                 break;
-
             case "C-SCAN":
                 int[] tempCScan = new int[n + 1];
                 for (int i = 0; i < n; i++) {
                     tempCScan[i] = peticiones[i];
                 }
                 tempCScan[n] = cabezalInicial;
-
                 ordenarArreglo(tempCScan, tempCScan.length);
-
                 int indexCScan = 0;
                 for (int i = 0; i < tempCScan.length; i++) {
                     if (tempCScan[i] == cabezalInicial) {
                         indexCScan = i;
                     }
                 }
-
-                // Hacia arriba
                 for (int i = indexCScan + 1; i < tempCScan.length; i++) {
                     secuencia[indiceSecuencia++] = tempCScan[i];
                 }
-                // Toca el final, salta al principio
                 secuencia[indiceSecuencia++] = MAX_PISTA;
                 secuencia[indiceSecuencia++] = 0;
-
-                // Sigue subiendo desde el inicio
                 for (int i = 0; i < indexCScan; i++) {
                     secuencia[indiceSecuencia++] = tempCScan[i];
                 }
                 break;
-
             default:
                 for (int i = 0; i < n; i++) {
                     secuencia[indiceSecuencia++] = peticiones[i];
@@ -997,7 +892,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 break;
         }
 
-        return secuencia; // Ojo: los espacios no usados tendrán -1
+        return secuencia;
     }
 
     public void refrescarArbolUI(Directory carpetaRaizLogica) {
@@ -1007,9 +902,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         arbolDirectorios.setModel(modelo);
     }
 
-// ==========================================
-// EL MÉTODO RECURSIVO (CORREGIDO)
-// ==========================================
+
     private void poblarNodoRecursivo(Directory carpetaLogica, DefaultMutableTreeNode nodoPadreVisual) {
         if (carpetaLogica.getDirectories() != null) {
             Directory actualDir = carpetaLogica.getDirectories().getFirstDirectory();
@@ -1037,7 +930,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
 
         Block aux = archivo.getFirstBlock();
         while (aux != null) {
-            // Marcamos el bloque en la vista visual del PanelSD
             miDisco.getVistaDisco().asignarBloqueVisual(aux.getId(), color);
             aux = aux.getNext();
         }
@@ -1098,42 +990,29 @@ public class JFramePrincipal extends javax.swing.JFrame {
         try {
             System.out.println("--- INICIANDO LECTURA DE JSON ---");
             JSONObject raiz = new JSONObject(contenidoJson);
-
             modeloTabla.setRowCount(0);
             System.out.println("1. Tabla limpiada.");
-
             miDisco.reiniciarEstructura();
             generalRequests = new Queue("Requests");
             Directory directory = new Directory(raiz.getString("test_id"));
             int cabezalInicial = raiz.getInt("initial_head");
             miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
-
             JSONObject systemFiles = raiz.getJSONObject("system_files");
             System.out.println("2. JSON detecta " + systemFiles.length() + " archivos en system_files.");
-
             Iterator<String> keys = systemFiles.keys();
-
             while (keys.hasNext()) {
-                String key = keys.next(); // Esta es la posición (ej: "11")
+                String key = keys.next(); 
                 int posicionInicial = Integer.parseInt(key);
                 JSONObject fileData = systemFiles.getJSONObject(key);
                 String nombreArchivo = fileData.getString("name");
                 int cantBloques = fileData.getInt("blocks");
-
                 System.out.println("-> Cargando en posición " + posicionInicial + ": " + nombreArchivo);
-
                 Color colorArchivo = obtenerColorAleatorio();
-
-                // CAMBIO CLAVE: Usamos un nuevo método que crearemos en GestorDisco
                 File tempFile = miDisco.cargarArchivoEnPosicionEspecifica(posicionInicial, cantBloques, "Admin", colorArchivo, log);
-
                 if (tempFile != null) {
                     tempFile.setName(nombreArchivo);
                     directory.addFile(tempFile);
-
-                    // Pintar visualmente los bloques específicos
                     pintarArchivoEnPanel(tempFile, colorArchivo);
-
                     int primerBloqueId = tempFile.getFirstBlock().getId();
                     modeloTabla.addRow(new Object[]{
                         tempFile.getName(),
@@ -1143,7 +1022,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
                     });
                 }
             }
-
             JSONArray requests = raiz.getJSONArray("requests");
             System.out.println("3. Cargando " + requests.length() + " peticiones...");
             for (int i = 0; i < requests.length(); i++) {
@@ -1151,27 +1029,17 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 Request request1 = new Request(request.getInt("pos"), request.getString("op"));
                 generalRequests.addRequest(request1);
             }
-
             refrescarArbolUI(directory);
             panelContenedorDisco.repaint();
-
             System.out.println("--- LECTURA DE JSON FINALIZADA ---");
             refrescarArbolUI(directory);
             panelContenedorDisco.repaint();
-
             System.out.println("--- LECTURA DE JSON FINALIZADA ---");
-
-            // ==========================================
-            // AGREGA ESTAS 3 LÍNEAS AQUÍ:
-            // ==========================================
-            modeloTabla.fireTableDataChanged(); // Avisa que los datos cambiaron
-            tablaAsignacion.revalidate();       // Recalcula el tamaño
-            tablaAsignacion.repaint();          // Fuerza el dibujo en pantalla
-            // Ponemos el valor que trajo el JSON
+            modeloTabla.fireTableDataChanged(); 
+            tablaAsignacion.revalidate(); 
+            tablaAsignacion.repaint();       
             txtCabezalInicial.setText(String.valueOf(cabezalInicial));
-            // ¡Quitamos el candado para que el usuario pueda cambiarlo si quiere!
             txtCabezalInicial.setEditable(true);
-
             return true;
         } catch (JSONException e) {
             System.out.println("Error de validación (JSONException): " + e.getMessage());
@@ -1185,51 +1053,36 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private DefaultMutableTreeNode getSelectedNode() {
         return (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
     }
-
-    // ==========================================
-    // CLASE PARA PINTAR LA CELDA DE COLOR EN LA TABLA
-    // ==========================================
     class ColorRenderer extends JLabel implements TableCellRenderer {
-
         public ColorRenderer() {
-            setOpaque(true); // Necesario para que el color de fondo se vea
+            setOpaque(true); 
         }
-
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
                 boolean isSelected, boolean hasFocus, int row, int column) {
             if (value instanceof Color) {
-                setBackground((Color) value); // Pintamos el fondo
-                setText(""); // Borramos el texto
+                setBackground((Color) value); 
+                setText(""); 
             }
             return this;
         }
     }
-// === MÉTODO PARA RECORRER EL ÁRBOL Y LIBERAR BLOQUES ===
-
+    
+// MÉTODO PARA RECORRER EL ÁRBOL Y LIBERAR BLOQUES ===
     private void eliminarNodoRecursivo(DefaultMutableTreeNode nodo) throws Exception {
         Object userObj = nodo.getUserObject();
         DefaultMutableTreeNode nodoPadre = (DefaultMutableTreeNode) nodo.getParent();
-
         if (userObj instanceof File) {
             File archivo = (File) userObj;
-
-            // 1. Liberamos bloques y tabla (Lo que ya hacíamos)
             liberarArchivoVisualYTabla(archivo);
-
-            // 2. ¡CRÍTICO! Eliminar el archivo de la lista de la CARPETA LÓGICA
             if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
                 Directory carpetaPadre = (Directory) nodoPadre.getUserObject();
-                // Suponiendo que tu clase Directory tiene un método para quitar archivos
                 carpetaPadre.getFiles().removeFile(archivo);
             }
         } else if (userObj instanceof Directory) {
-            // Si es carpeta, procesar hijos primero
             for (int i = nodo.getChildCount() - 1; i >= 0; i--) {
                 eliminarNodoRecursivo((DefaultMutableTreeNode) nodo.getChildAt(i));
             }
-
-            // Al final, quitar la subcarpeta de la carpeta padre
             if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
                 Directory padre = (Directory) nodoPadre.getUserObject();
                 padre.getDirectories().removeDirectory((Directory) userObj);
@@ -1238,49 +1091,31 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }
 
     public void agregarEventoLog(String mensaje) {
-        // Armamos el mensaje con el formato: [Ciclo X] Mensaje...
         String linea = "[Ciclo " + cicloActual + "] " + mensaje + "\n";
-
-        // Lo agregamos al área de texto
         txtLogEventos.append(linea);
-
-        // MAGIA: Hacemos que la barra de desplazamiento baje automáticamente al final
         txtLogEventos.setCaretPosition(txtLogEventos.getDocument().getLength());
     }
 
-// === MÉTODO QUE DEVUELVE LOS BLOQUES AL BITMAP (COLA DE LIBRES) ===
+//  MÉTODO QUE DEVUELVE LOS BLOQUES AL BITMAP (COLA DE LIBRES) 
     private void liberarArchivoVisualYTabla(File archivo) {
         Block bloqueActual = archivo.getFirstBlock();
         if (bloqueActual == null) {
             return;
         }
-
         while (bloqueActual != null) {
             Block siguienteSeguro = bloqueActual.getNext();
-
-            // 1. INTERACCIÓN CON EL GESTOR DE DISCO (Vital para la Cola de Libres)
-            // Aquí es donde el GestorDisco recupera el control del bloque
             if (miDisco.getColaLibres() != null) {
-                // Limpiamos el bloque antes de devolverlo
                 bloqueActual.setNext(null);
-
-                // USAR PUSH para que sea el primero en reasignarse
                 miDisco.getColaLibres().pushBlock(bloqueActual);
-
-                // 2. ACTUALIZACIÓN VISUAL (A través del gestor o su vista)
                 miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), Color.WHITE);
             }
-
             bloqueActual = siguienteSeguro;
         }
-
         archivo.setFirstBlock(null);
-
-        // 3. LIMPIAR TABLA DE ASIGNACIÓN
         eliminarFilaDeTabla(archivo.getName());
     }
 
-// === MÉTODO PARA LIMPIAR LA FILA EN LA TABLA DE ASIGNACIÓN ===
+//  MÉTODO PARA LIMPIAR LA FILA EN LA TABLA DE ASIGNACIÓN 
     private void eliminarFilaDeTabla(String nombreArchivo) {
         DefaultTableModel modelo = (DefaultTableModel) tablaAsignacion.getModel();
         for (int i = 0; i < modelo.getRowCount(); i++) {
