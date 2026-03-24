@@ -389,9 +389,9 @@ public class JFramePrincipal extends javax.swing.JFrame {
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, paneArbolLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel4)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 298, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(112, 112, 112))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 437, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jPanel2.setBackground(new java.awt.Color(255, 153, 153));
@@ -444,8 +444,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
                     .addComponent(jLabel5, javax.swing.GroupLayout.PREFERRED_SIZE, 16, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 51, Short.MAX_VALUE)
-                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 51, Short.MAX_VALUE))
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE)
+                    .addComponent(jScrollPane3, javax.swing.GroupLayout.DEFAULT_SIZE, 36, Short.MAX_VALUE))
                 .addContainerGap())
         );
 
@@ -484,11 +484,12 @@ public class JFramePrincipal extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
                 .addComponent(PanelControles, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(paneArbol, javax.swing.GroupLayout.PREFERRED_SIZE, 326, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jTabbedPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jTabbedPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(paneArbol, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -603,8 +604,50 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_crearActionPerformed
 
     private void eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminarActionPerformed
-        if (mode == "admin") {
-            //eliminar archivo o directorio
+        // 1. Validar Permisos
+        if (!jadminisrtador1.isSelected()) {
+            JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // 2. Obtener lo que el usuario seleccionó en el árbol
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+
+        if (nodoSeleccionado == null) {
+            JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta en el árbol para eliminar.");
+            return;
+        }
+
+        // Proteger la raíz del disco para que no la borren por accidente
+        if (nodoSeleccionado.isRoot()) {
+            JOptionPane.showMessageDialog(this, "No se puede eliminar la raíz del disco duro.");
+            return;
+        }
+
+        // 3. Confirmación de seguridad
+        int confirmacion = JOptionPane.showConfirmDialog(this,
+                "¿Está seguro de que desea eliminar '" + nodoSeleccionado.toString() + "' y todo su contenido de forma permanente?",
+                "Confirmar Eliminación",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+
+        if (confirmacion == JOptionPane.YES_OPTION) {
+            try {
+                // A. Disparamos la recursividad para liberar bloques y limpiar la tabla
+                eliminarNodoRecursivo(nodoSeleccionado);
+
+                // B. Eliminar del modelo del Árbol de la Interfaz
+                DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+                modeloArbol.removeNodeFromParent(nodoSeleccionado);
+
+                // C. Refrescamos el dibujo del disco
+                panelContenedorDisco.repaint();
+
+                JOptionPane.showMessageDialog(this, "Elemento eliminado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
+
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Error al intentar eliminar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }//GEN-LAST:event_eliminarActionPerformed
 
@@ -885,6 +928,57 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 setText(""); // Borramos el texto
             }
             return this;
+        }
+    }
+
+    // --- FUNCIÓN RECURSIVA PARA RECORRER EL ÁRBOL Y ELIMINAR ---
+    private void eliminarNodoRecursivo(DefaultMutableTreeNode nodo) {
+        // 1. Recorrer y eliminar primero a todos los hijos (subcarpetas o archivos)
+        for (int i = 0; i < nodo.getChildCount(); i++) {
+            DefaultMutableTreeNode hijo = (DefaultMutableTreeNode) nodo.getChildAt(i);
+            eliminarNodoRecursivo(hijo);
+        }
+
+        // 2. Una vez que no tiene hijos, evaluamos qué es este nodo
+        Object contenido = nodo.getUserObject();
+        if (contenido instanceof File) {
+            liberarArchivoVisualYTabla((File) contenido);
+        }
+        // Nota: Si es Directory, no ocupa bloques, así que no hacemos nada especial aquí.
+    }
+
+    // --- FUNCIÓN PARA LIMPIAR GRID, TABLA Y LÓGICA (CORREGIDA) ---
+    private void liberarArchivoVisualYTabla(File archivo) {
+        // A. Liberar en el Grid Visual y devolver a la cola
+        Block bloqueActual = archivo.getFirstBlock();
+
+        while (bloqueActual != null) {
+            // 1. Guardamos quién es el siguiente
+            Block siguienteSeguro = bloqueActual.getNext();
+
+            // 2. Pintamos el bloque de blanco en el disco visual
+            miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), Color.WHITE);
+
+            // 3. ¡LA CLAVE! Desconectamos este bloque del resto del archivo
+            // (Asegúrate de tener este método en tu clase Block, si se llama distinto, cámbialo)
+            bloqueActual.setNext(null);
+
+            // 4. Ahora sí, lo metemos a la cola de libres de forma segura
+            if (miDisco.getColaLibres() != null) {
+                miDisco.getColaLibres().addBlock(bloqueActual);
+            }
+
+            // 5. Avanzamos al siguiente
+            bloqueActual = siguienteSeguro;
+        }
+
+        // B. Eliminar de la Tabla de Asignación
+        for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+            // Buscamos el archivo por su nombre
+            if (modeloTabla.getValueAt(i, 0).equals(archivo.getName())) {
+                modeloTabla.removeRow(i);
+                break;
+            }
         }
     }
 
