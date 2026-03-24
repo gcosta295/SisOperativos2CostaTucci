@@ -1,58 +1,95 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.sisoperativos2costatucci.logic;
 
-/**
- *
- * @author astv06
- */
 public class Queue {
 
     private Block firstBlock;
     private Process firstProcess;
+    private File firstFile;
+    private Directory firstDirectory;
+    private Request firstRequest;
+    private Row firstRow;
     private String queueName;
     private int queuesize;
 
+    // ==========================================
+    // CONSTRUCTOR
+    // ==========================================
+    public Queue(String name) {
+        this.firstBlock = null;
+        this.firstProcess = null;
+        this.firstDirectory = null;
+        this.firstFile = null;
+        this.queueName = name;
+        this.queuesize = 0;
+    }
+
+    // ==========================================
+    // GETTERS Y SETTERS
+    // ==========================================
     public Block getFirstBlock() {
         return firstBlock;
     }
 
-    public String getQueueName() {
-        return queueName;
+    public Request getFirstRequest() {
+        return firstRequest;
     }
 
-    public int getQueuesize() {
-        return queuesize;
-    }
-
-    public Process getFirstProcess() {
-        return firstProcess;
+    public Row getFirstRow() {
+        return firstRow;
     }
 
     public void setFirstBlock(Block firstBlock) {
         this.firstBlock = firstBlock;
     }
 
-    public void setQueueName(String queueName) {
-        this.queueName = queueName;
-    }
-
-    public void setQueuesize(int queuesize) {
-        this.queuesize = queuesize;
+    public Process getFirstProcess() {
+        return firstProcess;
     }
 
     public void setFirstProcess(Process firstProcess) {
         this.firstProcess = firstProcess;
     }
 
-    public Queue(String name) {
-        this.firstBlock = null;
-        this.firstProcess = null;
-        this.queueName = name;
-        this.queuesize = 0;
+    public File getFirstFile() {
+        return firstFile;
     }
+
+    public void setFirstFile(File firstFile) {
+        this.firstFile = firstFile;
+    }
+
+    public Directory getFirstDirectory() {
+        return firstDirectory;
+    }
+
+    public void setFirstDirectory(Directory firstDirectory) {
+        this.firstDirectory = firstDirectory;
+    }
+
+    public String getQueueName() {
+        return queueName;
+    }
+
+    public void setFirstRequest(Request firstRequest) {
+        this.firstRequest = firstRequest;
+    }
+
+    public void setFirstRow(Row firstRow) {
+        this.firstRow = firstRow;
+    }
+
+    public void setQueueName(String queueName) {
+        this.queueName = queueName;
+    }
+
+    public int getQueuesize() {
+        return queuesize;
+    }
+
+    public void setQueuesize(int queuesize) {
+        this.queuesize = queuesize;
+    }
+
 
     public void addBlock(Block block) {
         if (this.firstBlock == null) {
@@ -92,11 +129,201 @@ public class Queue {
             Block headBlock = this.firstBlock;
             this.firstBlock = headBlock.getNext();
             headBlock.setNext(null);
-            this.queuesize -= 1; // ¡Faltaba esto!
+            this.queuesize -= 1; 
             return headBlock;
         } else {
             return null;
         }
     }
 
+    // ==========================================
+    // MÉTODOS PARA DIRECTORIOS Y ARCHIVOS
+    // ==========================================
+    public void addDirectory(Directory dir) {
+        if (this.firstDirectory == null) {
+            this.firstDirectory = dir;
+        } else {
+            Directory tempDir = this.firstDirectory;
+            while (tempDir.getNext() != null) {
+                tempDir = tempDir.getNext();
+            }
+            tempDir.setNext(dir);
+        }
+        this.queuesize += 1;
+    }
+
+    public void addFile(File file) {
+        if (this.firstFile == null) {
+            this.firstFile = file;
+        } else {
+            File tempFile = this.firstFile;
+            while (tempFile.getNext() != null) {
+                tempFile = tempFile.getNext();
+            }
+            tempFile.setNext(file);
+        }
+        this.queuesize += 1;
+    }
+    
+    public void addRequest(Request request) {
+        if (this.firstRequest == null) {
+            this.firstRequest = request;
+        } else {
+            Request tempRequest = this.firstRequest;
+            while (tempRequest.getNextRequest()!= null) {
+                tempRequest = tempRequest.getNextRequest();
+            }
+            tempRequest.setNextRequest(request);
+        }
+        this.queuesize += 1;
+    }
+    
+    public Block popBlockById(int id) {
+    if (this.firstBlock == null) return null;
+
+    // Caso 1: Es el primero de la lista
+    if (this.firstBlock.getId() == id) {
+        return popFirstBlock();
+    }
+
+    // Caso 2: Buscar en el resto de la lista
+    Block prev = this.firstBlock;
+    Block current = this.firstBlock.getNext();
+
+    while (current != null) {
+        if (current.getId() == id) {
+            prev.setNext(current.getNext()); // Saltamos el nodo actual
+            current.setNext(null);           // Lo aislamos
+            this.queuesize -= 1;
+            return current;
+        }
+        prev = current;
+        current = current.getNext();
+    }
+    return null; // No se encontró o ya estaba ocupado
+}
+    // ==========================================
+// MÉTODO PUSH PARA BLOQUES (Inserta al inicio)
+// ==========================================
+public void pushBlock(Block block) {
+    if (block == null) return;
+    if (this.firstBlock == null) {
+        this.firstBlock = block;
+        block.setNext(null); // Aseguramos que no traiga punteros viejos
+    } else {
+        // El nuevo bloque apunta al que antes era el primero
+        block.setNext(this.firstBlock);
+        // El nuevo bloque pasa a ser la cabeza de la lista
+        this.firstBlock = block;
+    }
+    this.queuesize += 1;
+}
+    public void addRow(Row row) {
+        if (this.firstRow == null) {
+            this.firstRow = row;
+        } else {
+            row.setNextRow(this.firstRow);
+            this.firstRow = row;
+        this.queuesize += 1;
+    }
+    }
+    
+    public void deleteRow(){
+        if (this.firstRow != null) {
+            Row tempRow = this.firstRow;
+            this.firstRow=this.firstRow.getNextRow();
+            this.queuesize -= 1;
+        }
+        
+    }
+    
+    // ==========================================
+    // MÉTODOS PARA ELIMINAR ARCHIVOS Y DIRECTORIOS
+    // ==========================================
+
+    /**
+     * Elimina un archivo específico de la lista enlazada de archivos.
+     */
+    public void removeFile(File fileToRemove) {
+        if (this.firstFile == null || fileToRemove == null) return;
+
+        // Caso 1: El archivo a eliminar es el primero de la lista
+        if (this.firstFile == fileToRemove) {
+            this.firstFile = this.firstFile.getNext();
+            fileToRemove.setNext(null); // Aislamiento
+            this.queuesize -= 1;
+            return;
+        }
+
+        // Caso 2: Buscar en el resto de la lista
+        File current = this.firstFile;
+        while (current.getNext() != null) {
+            if (current.getNext() == fileToRemove) {
+                // Saltamos el nodo: El actual apunta al siguiente del que vamos a borrar
+                current.setNext(fileToRemove.getNext());
+                fileToRemove.setNext(null); // Aislamiento
+                this.queuesize -= 1;
+                return;
+            }
+            current = current.getNext();
+        }
+    }
+
+    /**
+     * Elimina un directorio específico de la lista enlazada de directorios.
+     */
+    public void removeDirectory(Directory dirToRemove) {
+        if (this.firstDirectory == null || dirToRemove == null) return;
+
+        // Caso 1: El directorio a eliminar es el primero
+        if (this.firstDirectory == dirToRemove) {
+            this.firstDirectory = this.firstDirectory.getNext();
+            dirToRemove.setNext(null); // Aislamiento
+            this.queuesize -= 1;
+            return;
+        }
+
+        // Caso 2: Buscar en el resto de la lista
+        Directory current = this.firstDirectory;
+        while (current.getNext() != null) {
+            if (current.getNext() == dirToRemove) {
+                current.setNext(dirToRemove.getNext());
+                dirToRemove.setNext(null); // Aislamiento
+                this.queuesize -= 1;
+                return;
+            }
+            current = current.getNext();
+        }
+    }
+    
+    /**
+     * Busca un bloque por su ID dentro de la lista de bloques libres,
+     * lo desconecta de la cola y lo devuelve.
+     * * @param id El ID del bloque que se desea extraer (ej: 11, 34, 62)
+     * @return El bloque encontrado o null si no existe o ya no está libre.
+     */
+    public Block extraerBloquePorId(int id) {
+        if (this.firstBlock == null) {
+            return null; // La cola está vacía
+        }
+        if (this.firstBlock.getId() == id) {
+            Block temp = this.firstBlock;
+            this.firstBlock = this.firstBlock.getNext();
+            temp.setNext(null); 
+            this.queuesize -= 1;
+            return temp;
+        }
+        Block actual = this.firstBlock;
+        while (actual.getNext() != null) {
+            if (actual.getNext().getId() == id) {
+                Block encontrado = actual.getNext();
+                actual.setNext(encontrado.getNext());
+                encontrado.setNext(null);
+                this.queuesize -= 1;
+                return encontrado;
+            }
+            actual = actual.getNext();
+        }
+        return null; 
+    }
 }
