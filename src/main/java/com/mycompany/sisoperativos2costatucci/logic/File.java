@@ -4,6 +4,8 @@
  */
 package com.mycompany.sisoperativos2costatucci.logic;
 
+import java.awt.Color;
+
 /**
  *
  * @author astv06
@@ -15,6 +17,7 @@ public class File {
     private String owner;
     private String name;
     private File next;
+    public Color color; // Agrega esta línea
 
     public void setSizeFile(int sizeFile) {
         this.sizeFile = sizeFile;
