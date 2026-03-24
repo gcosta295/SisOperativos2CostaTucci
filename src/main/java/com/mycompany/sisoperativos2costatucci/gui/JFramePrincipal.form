@@ -99,7 +99,7 @@
                                       <Group type="103" groupAlignment="0" attributes="0">
                                           <Component id="jLabel3" min="-2" max="-2" attributes="0"/>
                                           <Group type="102" alignment="0" attributes="0">
-                                              <Component id="jComboPlan" min="-2" max="-2" attributes="0"/>
+                                              <Component id="comboPolitica" min="-2" max="-2" attributes="0"/>
                                               <EmptySpace min="-2" pref="35" max="-2" attributes="0"/>
                                               <Component id="crear" min="-2" max="-2" attributes="0"/>
                                               <EmptySpace min="-2" pref="15" max="-2" attributes="0"/>
@@ -112,13 +112,18 @@
                                               <Component id="update" min="-2" max="-2" attributes="0"/>
                                               <EmptySpace type="separate" max="-2" attributes="0"/>
                                               <Component id="Json" min="-2" max="-2" attributes="0"/>
+                                              <EmptySpace type="separate" max="-2" attributes="0"/>
+                                              <Group type="103" groupAlignment="0" attributes="0">
+                                                  <Component id="botonFallo" min="-2" max="-2" attributes="0"/>
+                                                  <Component id="botonPrueba" min="-2" max="-2" attributes="0"/>
+                                              </Group>
                                           </Group>
                                       </Group>
                                   </Group>
                               </Group>
                           </Group>
                       </Group>
-                      <EmptySpace pref="206" max="32767" attributes="0"/>
+                      <EmptySpace pref="54" max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -135,17 +140,26 @@
                       <EmptySpace max="-2" attributes="0"/>
                       <Group type="103" groupAlignment="3" attributes="0">
                           <Component id="jadminisrtador1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="jComboPlan" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="crear" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="eliminar" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="eliminar1" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="crear1" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="update" alignment="3" min="-2" max="-2" attributes="0"/>
                           <Component id="Json" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="botonPrueba" alignment="3" min="-2" max="-2" attributes="0"/>
+                          <Component id="comboPolitica" alignment="1" min="-2" pref="22" max="-2" attributes="0"/>
                       </Group>
-                      <EmptySpace max="-2" attributes="0"/>
-                      <Component id="jusuario" min="-2" max="-2" attributes="0"/>
-                      <EmptySpace min="-2" pref="42" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
+                          <Group type="102" attributes="0">
+                              <EmptySpace max="-2" attributes="0"/>
+                              <Component id="jusuario" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                          <Group type="102" alignment="0" attributes="0">
+                              <EmptySpace min="-2" pref="14" max="-2" attributes="0"/>
+                              <Component id="botonFallo" min="-2" max="-2" attributes="0"/>
+                          </Group>
+                      </Group>
+                      <EmptySpace min="-2" pref="32" max="-2" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -203,7 +217,7 @@
                 <Property name="opaque" type="boolean" value="true"/>
               </Properties>
             </Component>
-            <Component class="javax.swing.JComboBox" name="jComboPlan">
+            <Component class="javax.swing.JComboBox" name="comboPolitica">
               <Properties>
                 <Property name="model" type="javax.swing.ComboBoxModel" editor="org.netbeans.modules.form.editors2.ComboBoxModelEditor">
                   <StringArray count="4">
@@ -215,7 +229,7 @@
                 </Property>
               </Properties>
               <Events>
-                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="jComboPlanActionPerformed"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="comboPoliticaActionPerformed"/>
               </Events>
               <AuxValues>
                 <AuxValue name="JavaCodeGenerator_TypeParameters" type="java.lang.String" value="&lt;String&gt;"/>
@@ -268,6 +282,19 @@
               <Events>
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="JsonActionPerformed"/>
               </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="botonPrueba">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Prueba de Requests"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="botonPruebaActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="botonFallo">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Simular Fallo"/>
+              </Properties>
             </Component>
           </SubComponents>
         </Container>

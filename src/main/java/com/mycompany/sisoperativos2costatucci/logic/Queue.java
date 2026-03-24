@@ -90,9 +90,7 @@ public class Queue {
         this.queuesize = queuesize;
     }
 
-    // ==========================================
-    // MÉTODOS PARA BLOQUES
-    // ==========================================
+
     public void addBlock(Block block) {
         if (this.firstBlock == null) {
             this.firstBlock = block;
