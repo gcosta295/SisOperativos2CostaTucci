@@ -47,8 +47,8 @@ public class GestorDisco {
     // OPERACIONES CRUD DEL DISCO
     // =====================================
 
-public File crearArchivo(int size, String owner, Color color) {
-    File nuevoArchivo = new File(size, colaLibres, owner);
+public File crearArchivo(int size, String owner, Color color,Queue log) throws Exception {
+    File nuevoArchivo = new File(size, colaLibres, owner, log);
     Block bloqueActual = nuevoArchivo.getFirstBlock();
     while (bloqueActual != null) {
         vistaDisco.asignarBloqueVisual(bloqueActual.getId(), color);

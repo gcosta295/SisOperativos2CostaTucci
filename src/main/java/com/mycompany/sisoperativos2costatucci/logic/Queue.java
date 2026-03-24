@@ -204,16 +204,38 @@ public class Queue {
     }
     return null; // No se encontró o ya estaba ocupado
 }
+    // ==========================================
+// MÉTODO PUSH PARA BLOQUES (Inserta al inicio)
+// ==========================================
+public void pushBlock(Block block) {
+    if (block == null) return;
+    if (this.firstBlock == null) {
+        this.firstBlock = block;
+        block.setNext(null); // Aseguramos que no traiga punteros viejos
+    } else {
+        // El nuevo bloque apunta al que antes era el primero
+        block.setNext(this.firstBlock);
+        // El nuevo bloque pasa a ser la cabeza de la lista
+        this.firstBlock = block;
+    }
+    this.queuesize += 1;
+}
     public void addRow(Row row) {
         if (this.firstRow == null) {
             this.firstRow = row;
         } else {
-            Row tempRow = this.firstRow;
-            while (tempRow.getNextRow()!= null) {
-                tempRow = tempRow.getNextRow();
-            }
-            tempRow.setNextRow(row);
-        }
+            row.setNextRow(this.firstRow);
+            this.firstRow = row;
         this.queuesize += 1;
+    }
+    }
+    
+    public void deleteRow(){
+        if (this.firstRow != null) {
+            Row tempRow = this.firstRow;
+            this.firstRow=this.firstRow.getNextRow();
+            this.queuesize -= 1;
+        }
+        
     }
 }

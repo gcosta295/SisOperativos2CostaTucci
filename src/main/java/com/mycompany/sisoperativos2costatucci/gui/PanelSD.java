@@ -42,7 +42,6 @@ public class PanelSD extends JPanel {
 
     // Cambia el color del bloque cuando se asigna a un archivo
     public void asignarBloqueVisual(int id, Color color) {
-        // Validamos que el ID exista dentro del disco para evitar errores
         if (id >= 0 && id < bloquesVisuales.length) {
             bloquesVisuales[id].setBackground(color);
         }
