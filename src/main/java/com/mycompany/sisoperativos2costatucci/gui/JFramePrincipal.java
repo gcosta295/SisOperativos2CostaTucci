@@ -1087,37 +1087,35 @@ public class JFramePrincipal extends javax.swing.JFrame {
             Iterator<String> keys = systemFiles.keys();
 
             while (keys.hasNext()) {
-                String key = keys.next();
-                JSONObject fileData = systemFiles.getJSONObject(key);
-                String nombreArchivo = fileData.getString("name");
+    String key = keys.next(); // Esta es la posición (ej: "11")
+    int posicionInicial = Integer.parseInt(key); 
+    JSONObject fileData = systemFiles.getJSONObject(key);
+    String nombreArchivo = fileData.getString("name");
+    int cantBloques = fileData.getInt("blocks");
 
-                System.out.println("-> Intentando crear archivo: " + nombreArchivo + " con " + fileData.getInt("blocks") + " bloques.");
+    System.out.println("-> Cargando en posición " + posicionInicial + ": " + nombreArchivo);
 
-                Color colorArchivo = obtenerColorAleatorio();
-                File tempFile = miDisco.crearArchivo(fileData.getInt("blocks"), "Admin", colorArchivo, log);
+    Color colorArchivo = obtenerColorAleatorio();
+    
+    // CAMBIO CLAVE: Usamos un nuevo método que crearemos en GestorDisco
+    File tempFile = miDisco.cargarArchivoEnPosicionEspecifica(posicionInicial, cantBloques, "Admin", colorArchivo, log);
 
-                if (tempFile != null) {
-                    System.out.println("   ¡Archivo creado con éxito! Agregando a la tabla...");
-                    tempFile.setName(nombreArchivo);
-                    directory.addFile(tempFile);
+    if (tempFile != null) {
+        tempFile.setName(nombreArchivo);
+        directory.addFile(tempFile);
 
-                    pintarArchivoEnPanel(tempFile, colorArchivo);
+        // Pintar visualmente los bloques específicos
+        pintarArchivoEnPanel(tempFile, colorArchivo);
 
-                    int primerBloqueId = -1;
-                    if (tempFile.getFirstBlock() != null) {
-                        primerBloqueId = tempFile.getFirstBlock().getId();
-                    }
-
-                    modeloTabla.addRow(new Object[]{
-                        tempFile.getName(),
-                        fileData.getInt("blocks"),
-                        primerBloqueId,
-                        colorArchivo
-                    });
-                } else {
-                    System.out.println("   [ERROR] tempFile devolvió NULL. ¿El disco está lleno o reiniciarEstructura() falló?");
-                }
-            }
+        int primerBloqueId = tempFile.getFirstBlock().getId();
+        modeloTabla.addRow(new Object[]{
+            tempFile.getName(),
+            cantBloques,
+            primerBloqueId,
+            colorArchivo
+        });
+    }
+}
 
             JSONArray requests = raiz.getJSONArray("requests");
             System.out.println("3. Cargando " + requests.length() + " peticiones...");
