@@ -50,6 +50,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
      */
     public JFramePrincipal() throws Exception {
         initComponents();
+        txtCabezalInicial.setEditable(false);
         configurarTablaAsignacion();
         miDisco = new GestorDisco(181, 50);
         header = 0;
@@ -175,6 +176,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         Json = new javax.swing.JButton();
         botonPrueba = new javax.swing.JButton();
         botonFallo = new javax.swing.JButton();
+        txtCabezalInicial = new javax.swing.JTextField();
         paneArbol = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         arbolDirectorios = new javax.swing.JTree();
@@ -246,6 +248,13 @@ public class JFramePrincipal extends javax.swing.JFrame {
         botonFallo.setText("Simular Fallo");
         botonFallo.addActionListener(this::botonFalloActionPerformed);
 
+        txtCabezalInicial.setText("Posicion Cabezal");
+        txtCabezalInicial.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                txtCabezalInicialKeyTyped(evt);
+            }
+        });
+
         javax.swing.GroupLayout PanelControlesLayout = new javax.swing.GroupLayout(PanelControles);
         PanelControles.setLayout(PanelControlesLayout);
         PanelControlesLayout.setHorizontalGroup(
@@ -285,6 +294,11 @@ public class JFramePrincipal extends javax.swing.JFrame {
                                             .addComponent(botonFallo)
                                             .addComponent(botonPrueba))))))))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                            .addComponent(botonPrueba)))))))
+                    .addGroup(PanelControlesLayout.createSequentialGroup()
+                        .addGap(488, 488, 488)
+                        .addComponent(txtCabezalInicial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addContainerGap(54, Short.MAX_VALUE))
         );
         PanelControlesLayout.setVerticalGroup(
             PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -314,7 +328,9 @@ public class JFramePrincipal extends javax.swing.JFrame {
                     .addGroup(PanelControlesLayout.createSequentialGroup()
                         .addGap(14, 14, 14)
                         .addComponent(botonFallo)))
-                .addGap(32, 32, 32))
+                .addGap(4, 4, 4)
+                .addComponent(txtCabezalInicial, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         paneArbol.setBackground(new java.awt.Color(51, 102, 255));
@@ -406,7 +422,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         jTabbedPane2.setBackground(new java.awt.Color(255, 51, 102));
 
         panelContenedorDisco.setLayout(new java.awt.BorderLayout());
-        jTabbedPane2.addTab("tab1", panelContenedorDisco);
+        jTabbedPane2.addTab("SD", panelContenedorDisco);
 
         tablaAsignacion.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -421,7 +437,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         ));
         jScrollPane5.setViewportView(tablaAsignacion);
 
-        jTabbedPane2.addTab("tab3", jScrollPane5);
+        jTabbedPane2.addTab("Tabla de Asignacion", jScrollPane5);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -750,14 +766,29 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jScrollPane2ComponentShown
 
     private void botonPruebaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonPruebaActionPerformed
-        // 1. Verificamos que la cola exista y tenga elementos
+// 1. Verificamos que la cola exista y tenga elementos
         if (generalRequests == null || generalRequests.getQueuesize() == 0) {
             javax.swing.JOptionPane.showMessageDialog(this, "Por favor, carga un archivo JSON primero.", "Faltan datos", javax.swing.JOptionPane.WARNING_MESSAGE);
             return;
         }
 
-        // 2. Cabezal inicial (leído de tu planificador)
-        int cabezalInicial = miDisco.getPlanificador().getPosicionCabezal();
+        // ==========================================
+        // 2. ¡NUEVO! LEER EL CABEZAL DESDE LA INTERFAZ
+        // ==========================================
+        int cabezalInicial = 0;
+        try {
+            // Asegúrate de que el nombre coincida con tu JTextField
+            cabezalInicial = Integer.parseInt(txtCabezalInicial.getText().trim());
+
+            // Actualizamos también el modelo interno para que todo esté sincronizado
+            miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
+
+        } catch (NumberFormatException e) {
+            // Si el usuario dejó el cuadro vacío o escribió letras, mostramos un error y detenemos el proceso
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, ingresa un número válido para la posición inicial del cabezal.", "Error de entrada", javax.swing.JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        // ==========================================
 
         // 3. Obtenemos el tamaño y las peticiones
         int cantidadPeticiones = generalRequests.getQueuesize();
@@ -771,13 +802,15 @@ public class JFramePrincipal extends javax.swing.JFrame {
             tempRequest = tempRequest.getNextRequest();
             indice++;
         }
-        String politica = comboPolitica.getSelectedItem().toString();
-    
 
+        // 4. Leer la política seleccionada del JComboBox
+        String politica = comboPolitica.getSelectedItem().toString();
+
+        // 5. Calculamos la secuencia pasándole el cabezal arbitrario
         int[] secuencia = calcularSecuencia(politica, peticiones, cabezalInicial);
 
         // 6. Animación del panel visual
-        javax.swing.Timer timerAnimacion = new javax.swing.Timer(800, new java.awt.event.ActionListener() {
+        javax.swing.Timer timerAnimacion = new javax.swing.Timer(500, new java.awt.event.ActionListener() {
             int pasoActual = 0;
 
             @Override
@@ -1109,7 +1142,11 @@ public class JFramePrincipal extends javax.swing.JFrame {
             modeloTabla.fireTableDataChanged(); // Avisa que los datos cambiaron
             tablaAsignacion.revalidate();       // Recalcula el tamaño
             tablaAsignacion.repaint();          // Fuerza el dibujo en pantalla
-            // ==========================================
+            // Ponemos el valor que trajo el JSON
+            txtCabezalInicial.setText(String.valueOf(cabezalInicial));
+            // ¡Quitamos el candado para que el usuario pueda cambiarlo si quiere!
+            txtCabezalInicial.setEditable(true);
+
             return true;
         } catch (JSONException e) {
             System.out.println("Error de validación (JSONException): " + e.getMessage());
@@ -1248,6 +1285,7 @@ private void eliminarFilaDeTabla(String nombreArchivo) {
     private javax.swing.JPanel paneArbol;
     private javax.swing.JPanel panelContenedorDisco;
     private javax.swing.JTable tablaAsignacion;
+    private javax.swing.JTextField txtCabezalInicial;
     private javax.swing.JButton update;
     // End of variables declaration//GEN-END:variables
 }
