@@ -17,7 +17,7 @@ public class File {
     private String owner;
     private String name;
     private File next;
-    public Color color; // Agrega esta línea
+    public Color color; 
 
     public void setSizeFile(int sizeFile) {
         this.sizeFile = sizeFile;
@@ -73,15 +73,15 @@ public File(int size, Queue bitMap, String owner, Queue log) throws Exception {
                 Row lastAction = log.getFirstRow();
                 if (lastAction != null && lastAction.getAfterChange() != null) {
                     Block blockToReturn = lastAction.getAfterChange();
-                    blockToReturn.setNext(null); // Desconectamos el bloque
-                    bitMap.pushBlock(blockToReturn); // Lo devolvemos al pool
+                    blockToReturn.setNext(null); 
+                    bitMap.pushBlock(blockToReturn); 
                 }
-                log.deleteRow(); // Borramos del log
+                log.deleteRow(); 
             }
-            this.firstBlock = null; // Limpiamos el objeto File
-            throw e; // Llevamos el error al nivel superior
+            this.firstBlock = null; 
+            throw e; 
         }
-    } // Aquí se libera el log para que otros hilos puedan usarlo
+    } 
 }
     public File getNext() {
         return next;
@@ -93,7 +93,6 @@ public File(int size, Queue bitMap, String owner, Queue log) throws Exception {
 
     @Override
     public String toString() {
-        // Esto hará que en la interfaz se vea exactamente como en tu foto de referencia
         int cantidad = 0;
         Block actual = this.getFirstBlock();
         while (actual != null) {
