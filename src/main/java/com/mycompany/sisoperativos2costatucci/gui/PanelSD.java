@@ -3,43 +3,42 @@ package com.mycompany.sisoperativos2costatucci.gui;
 import javax.swing.*;
 import java.awt.*;
 
-
 public class PanelSD extends JPanel {
-    
+
     // Arreglo básico para guardar las referencias a los cuadritos de la interfaz
     private JPanel[] bloquesVisuales;
+    private int posicionCabezalActual = -1;
 
     public PanelSD(int totalBloques) {
         // 1. Configuramos el Layout como una cuadrícula (Grid)
         // Calculamos la raíz cuadrada para hacer una cuadrícula perfecta (ej: 100 bloques = 10x10)
         int filasColumnas = (int) Math.ceil(Math.sqrt(totalBloques));
         setLayout(new GridLayout(filasColumnas, filasColumnas, 2, 2)); // 2px de separación entre cuadros
-        
+
         // Un fondo oscuro hará que la separación de 2px parezca una cuadrícula
-        setBackground(Color.DARK_GRAY); 
-        
+        setBackground(Color.DARK_GRAY);
+
         // 2. Inicializamos el arreglo con la cantidad de bloques solicitada
         bloquesVisuales = new JPanel[totalBloques];
-        
+
         // 3. Creamos cada cuadrito, lo pintamos de blanco y lo agregamos al panel
         for (int i = 0; i < totalBloques; i++) {
             JPanel cuadrito = new JPanel();
             cuadrito.setBackground(Color.WHITE); // Blanco = Bloque Libre/Vacío
-            
+
             // Le ponemos un pequeño borde y el número (ID) para que se vea más profesional
             cuadrito.setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-            cuadrito.add(new JLabel(String.valueOf(i))); 
-            
+            cuadrito.add(new JLabel(String.valueOf(i)));
+
             // Lo guardamos en el arreglo para poder cambiarle el color después
-            bloquesVisuales[i] = cuadrito; 
-            
+            bloquesVisuales[i] = cuadrito;
+
             // Lo añadimos a la cuadrícula del PanelSD
-            add(cuadrito); 
+            add(cuadrito);
         }
     }
 
     // --- MÉTODOS PÚBLICOS QUE USA EL GESTORDISCO ---
-
     // Cambia el color del bloque cuando se asigna a un archivo
     public void asignarBloqueVisual(int id, Color color) {
         if (id >= 0 && id < bloquesVisuales.length) {
@@ -53,18 +52,34 @@ public class PanelSD extends JPanel {
             bloquesVisuales[id].setBackground(Color.WHITE);
         }
     }
-    
+
     // Reinicia todos los bloques del panel al color blanco (Estado inicial)
-public void limpiarTodosLosBloques() {
-    if (bloquesVisuales != null) {
-        for (JPanel cuadrito : bloquesVisuales) {
-            cuadrito.setBackground(Color.WHITE);
+    public void limpiarTodosLosBloques() {
+        if (bloquesVisuales != null) {
+            for (JPanel cuadrito : bloquesVisuales) {
+                cuadrito.setBackground(Color.WHITE);
+            }
+            // Repaint asegura que los cambios de color se vean inmediatamente
+            this.repaint();
+            this.revalidate();
         }
-        // Repaint asegura que los cambios de color se vean inmediatamente
-        this.repaint();
-        this.revalidate();
     }
-}
+
+    public void moverCabezalVisual(int nuevaPosicion) {
+        // 1. Si el cabezal estaba en otro lado, le devolvemos su borde normal
+        if (posicionCabezalActual >= 0 && posicionCabezalActual < bloquesVisuales.length) {
+            bloquesVisuales[posicionCabezalActual].setBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        }
+
+        // 2. Dibujamos el cabezal en la nueva posición (Borde rojo de 3 píxeles de grosor)
+        if (nuevaPosicion >= 0 && nuevaPosicion < bloquesVisuales.length) {
+            bloquesVisuales[nuevaPosicion].setBorder(BorderFactory.createLineBorder(Color.RED, 3));
+            posicionCabezalActual = nuevaPosicion;
+        }
+
+        // Refrescamos la interfaz
+        this.repaint();
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.

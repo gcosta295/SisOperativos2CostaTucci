@@ -164,13 +164,15 @@ public class JFramePrincipal extends javax.swing.JFrame {
         jadminisrtador1 = new javax.swing.JRadioButton();
         jLabel2 = new javax.swing.JLabel();
         jLabel3 = new javax.swing.JLabel();
-        jComboPlan = new javax.swing.JComboBox<>();
+        comboPolitica = new javax.swing.JComboBox<>();
         crear = new javax.swing.JButton();
         eliminar = new javax.swing.JButton();
         eliminar1 = new javax.swing.JButton();
         crear1 = new javax.swing.JButton();
         update = new javax.swing.JButton();
         Json = new javax.swing.JButton();
+        botonPrueba = new javax.swing.JButton();
+        botonFallo = new javax.swing.JButton();
         paneArbol = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         arbolDirectorios = new javax.swing.JTree();
@@ -215,8 +217,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
         jLabel3.setText("Planificador:");
         jLabel3.setOpaque(true);
 
-        jComboPlan.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "SSTF", "SCAN", "C-SCAN" }));
-        jComboPlan.addActionListener(this::jComboPlanActionPerformed);
+        comboPolitica.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "FIFO", "SSTF", "SCAN", "C-SCAN" }));
+        comboPolitica.addActionListener(this::comboPoliticaActionPerformed);
 
         crear.setText("Crear Archivo");
         crear.addActionListener(this::crearActionPerformed);
@@ -235,6 +237,11 @@ public class JFramePrincipal extends javax.swing.JFrame {
 
         Json.setText("Cargar JSON");
         Json.addActionListener(this::JsonActionPerformed);
+
+        botonPrueba.setText("Prueba de Requests");
+        botonPrueba.addActionListener(this::botonPruebaActionPerformed);
+
+        botonFallo.setText("Simular Fallo");
 
         javax.swing.GroupLayout PanelControlesLayout = new javax.swing.GroupLayout(PanelControles);
         PanelControles.setLayout(PanelControlesLayout);
@@ -257,7 +264,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
                                 .addGroup(PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                     .addComponent(jLabel3)
                                     .addGroup(PanelControlesLayout.createSequentialGroup()
-                                        .addComponent(jComboPlan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                        .addComponent(comboPolitica, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGap(35, 35, 35)
                                         .addComponent(crear)
                                         .addGap(15, 15, 15)
@@ -269,8 +276,12 @@ public class JFramePrincipal extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addComponent(update)
                                         .addGap(18, 18, 18)
-                                        .addComponent(Json)))))))
-                .addContainerGap(206, Short.MAX_VALUE))
+                                        .addComponent(Json)
+                                        .addGap(18, 18, 18)
+                                        .addGroup(PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(botonFallo)
+                                            .addComponent(botonPrueba))))))))
+                .addContainerGap(54, Short.MAX_VALUE))
         );
         PanelControlesLayout.setVerticalGroup(
             PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -284,16 +295,22 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jadminisrtador1)
-                    .addComponent(jComboPlan, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(crear)
                     .addComponent(eliminar)
                     .addComponent(eliminar1)
                     .addComponent(crear1)
                     .addComponent(update)
-                    .addComponent(Json))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jusuario)
-                .addGap(42, 42, 42))
+                    .addComponent(Json)
+                    .addComponent(botonPrueba)
+                    .addComponent(comboPolitica, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGroup(PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(PanelControlesLayout.createSequentialGroup()
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jusuario))
+                    .addGroup(PanelControlesLayout.createSequentialGroup()
+                        .addGap(14, 14, 14)
+                        .addComponent(botonFallo)))
+                .addGap(32, 32, 32))
         );
 
         paneArbol.setBackground(new java.awt.Color(51, 102, 255));
@@ -679,15 +696,192 @@ public class JFramePrincipal extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_JsonActionPerformed
 
-    private void jComboPlanActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboPlanActionPerformed
+    private void comboPoliticaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_comboPoliticaActionPerformed
         if (mode == "admin") {
             //planificador
         }
-    }//GEN-LAST:event_jComboPlanActionPerformed
+    }//GEN-LAST:event_comboPoliticaActionPerformed
 
     private void jScrollPane2ComponentShown(java.awt.event.ComponentEvent evt) {//GEN-FIRST:event_jScrollPane2ComponentShown
         // TODO add your handling code here:
     }//GEN-LAST:event_jScrollPane2ComponentShown
+
+    private void botonPruebaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonPruebaActionPerformed
+        // 1. Verificamos que la cola exista y tenga elementos
+        if (generalRequests == null || generalRequests.getQueuesize() == 0) {
+            javax.swing.JOptionPane.showMessageDialog(this, "Por favor, carga un archivo JSON primero.", "Faltan datos", javax.swing.JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        // 2. Cabezal inicial (leído de tu planificador)
+        int cabezalInicial = miDisco.getPlanificador().getPosicionCabezal();
+
+        // 3. Obtenemos el tamaño y las peticiones
+        int cantidadPeticiones = generalRequests.getQueuesize();
+        int[] peticiones = new int[cantidadPeticiones];
+
+        Request tempRequest = generalRequests.getFirstRequest();
+        int indice = 0;
+
+        while (tempRequest != null && indice < cantidadPeticiones) {
+            peticiones[indice] = tempRequest.getPos();
+            tempRequest = tempRequest.getNextRequest();
+            indice++;
+        }
+        String politica = comboPolitica.getSelectedItem().toString();
+    
+
+        int[] secuencia = calcularSecuencia(politica, peticiones, cabezalInicial);
+
+        // 6. Animación del panel visual
+        javax.swing.Timer timerAnimacion = new javax.swing.Timer(800, new java.awt.event.ActionListener() {
+            int pasoActual = 0;
+
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (pasoActual >= secuencia.length || secuencia[pasoActual] == -1) {
+                    ((javax.swing.Timer) e.getSource()).stop();
+                    javax.swing.JOptionPane.showMessageDialog(null, "¡Simulación finalizada con política " + politica + "!");
+                    return;
+                }
+
+                int pistaDestino = secuencia[pasoActual];
+                miDisco.getVistaDisco().moverCabezalVisual(pistaDestino);
+                pasoActual++;
+            }
+        });
+
+        timerAnimacion.start();
+    }//GEN-LAST:event_botonPruebaActionPerformed
+// Método auxiliar para ordenar arreglos (Bubble Sort)
+
+    private void ordenarArreglo(int[] arr, int n) {
+        for (int i = 0; i < n - 1; i++) {
+            for (int j = 0; j < n - i - 1; j++) {
+                if (arr[j] > arr[j + 1]) {
+                    int temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                }
+            }
+        }
+    }
+
+    // Calcula el orden de las pistas usando solo arreglos nativos
+    private int[] calcularSecuencia(String politica, int[] peticiones, int cabezalInicial) {
+        int n = peticiones.length;
+        // El tamaño máximo será n + 2 (por si SCAN/C-SCAN añaden los extremos 0 y 199)
+        int[] secuencia = new int[n + 2];
+
+        // Inicializamos el arreglo con -1 para identificar qué espacios están vacíos
+        for (int i = 0; i < secuencia.length; i++) {
+            secuencia[i] = -1;
+        }
+
+        int MAX_PISTA = 199;
+        int indiceSecuencia = 0;
+
+        switch (politica.toUpperCase()) {
+            case "FIFO":
+                for (int i = 0; i < n; i++) {
+                    secuencia[indiceSecuencia++] = peticiones[i];
+                }
+                break;
+
+            case "SSTF":
+                int posActual = cabezalInicial;
+                boolean[] visitado = new boolean[n]; // Por defecto se inicializa en false
+
+                for (int i = 0; i < n; i++) {
+                    int indiceMasCercano = -1;
+                    int menorDistancia = Integer.MAX_VALUE;
+
+                    for (int j = 0; j < n; j++) {
+                        if (!visitado[j]) {
+                            int distancia = Math.abs(peticiones[j] - posActual);
+                            if (distancia < menorDistancia) {
+                                menorDistancia = distancia;
+                                indiceMasCercano = j;
+                            }
+                        }
+                    }
+                    visitado[indiceMasCercano] = true;
+                    secuencia[indiceSecuencia++] = peticiones[indiceMasCercano];
+                    posActual = peticiones[indiceMasCercano];
+                }
+                break;
+
+            case "SCAN":
+                // Creamos un arreglo con las peticiones + el cabezal
+                int[] tempScan = new int[n + 1];
+                for (int i = 0; i < n; i++) {
+                    tempScan[i] = peticiones[i];
+                }
+                tempScan[n] = cabezalInicial;
+
+                ordenarArreglo(tempScan, tempScan.length);
+
+                // Buscamos dónde quedó el cabezal
+                int indexScan = 0;
+                for (int i = 0; i < tempScan.length; i++) {
+                    if (tempScan[i] == cabezalInicial) {
+                        indexScan = i;
+                    }
+                }
+
+                // Hacia arriba
+                for (int i = indexScan + 1; i < tempScan.length; i++) {
+                    secuencia[indiceSecuencia++] = tempScan[i];
+                }
+                // Toca el final
+                if (indiceSecuencia == 0 || secuencia[indiceSecuencia - 1] != MAX_PISTA) {
+                    secuencia[indiceSecuencia++] = MAX_PISTA;
+                }
+                // Hacia abajo
+                for (int i = indexScan - 1; i >= 0; i--) {
+                    secuencia[indiceSecuencia++] = tempScan[i];
+                }
+                break;
+
+            case "C-SCAN":
+                int[] tempCScan = new int[n + 1];
+                for (int i = 0; i < n; i++) {
+                    tempCScan[i] = peticiones[i];
+                }
+                tempCScan[n] = cabezalInicial;
+
+                ordenarArreglo(tempCScan, tempCScan.length);
+
+                int indexCScan = 0;
+                for (int i = 0; i < tempCScan.length; i++) {
+                    if (tempCScan[i] == cabezalInicial) {
+                        indexCScan = i;
+                    }
+                }
+
+                // Hacia arriba
+                for (int i = indexCScan + 1; i < tempCScan.length; i++) {
+                    secuencia[indiceSecuencia++] = tempCScan[i];
+                }
+                // Toca el final, salta al principio
+                secuencia[indiceSecuencia++] = MAX_PISTA;
+                secuencia[indiceSecuencia++] = 0;
+
+                // Sigue subiendo desde el inicio
+                for (int i = 0; i < indexCScan; i++) {
+                    secuencia[indiceSecuencia++] = tempCScan[i];
+                }
+                break;
+
+            default:
+                for (int i = 0; i < n; i++) {
+                    secuencia[indiceSecuencia++] = peticiones[i];
+                }
+                break;
+        }
+
+        return secuencia; // Ojo: los espacios no usados tendrán -1
+    }
 
     public void refrescarArbolUI(Directory carpetaRaizLogica) {
         DefaultMutableTreeNode nodoRaizVisual = new DefaultMutableTreeNode(carpetaRaizLogica);
@@ -949,12 +1143,14 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private javax.swing.JButton Json;
     private javax.swing.JPanel PanelControles;
     private javax.swing.JTree arbolDirectorios;
+    private javax.swing.JButton botonFallo;
+    private javax.swing.JButton botonPrueba;
     private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.JComboBox<String> comboPolitica;
     private javax.swing.JButton crear;
     private javax.swing.JButton crear1;
     private javax.swing.JButton eliminar;
     private javax.swing.JButton eliminar1;
-    private javax.swing.JComboBox<String> jComboPlan;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
