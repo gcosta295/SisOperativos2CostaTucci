@@ -147,7 +147,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
         }
     }
 
-    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -450,41 +449,45 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private void crearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearActionPerformed
         // Validamos si es administrador
         if (!jadminisrtador1.isSelected()) {
-        JOptionPane.showMessageDialog(this, 
-            "Acceso denegado. Use el modo Administrador.", 
-            "Error de Permisos", 
-            JOptionPane.ERROR_MESSAGE);
-        return; 
-    }
-    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-    if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
-        JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
-        return;
-    }
-    Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
-    String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
-    if (nombre == null || nombre.trim().isEmpty()) return;
-    String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
-    if (bloquesStr == null) return;
-    try {
-        int tamano = Integer.parseInt(bloquesStr);
-        Color colorNuevo = obtenerColorAleatorio();
-            File nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo,log);
-        Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
-        
-        if (!resultado.success) {
-            JOptionPane.showMessageDialog(this, 
-                "¡FALLA DETECTADA!\n" +
-                "El sistema ha ejecutado una recuperación semiautomática.\n" +
-                "Estado: " + resultado.errorMessage + "\n" +
-                "Bloques restaurados: " + resultado.processedCount,
-                "Recuperación del Sistema", 
-                JOptionPane.WARNING_MESSAGE);
-        } else {
-            // Si todo salió bien, agregamos al árbol
-            nuevoFile.setName(nombre.trim());
-            dirPadre.addFile(nuevoFile);
-            refrescarArbolUI((Directory) ((DefaultMutableTreeNode)arbolDirectorios.getModel().getRoot()).getUserObject());
+            JOptionPane.showMessageDialog(this,
+                    "Acceso denegado. Use el modo Administrador.",
+                    "Error de Permisos",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+        if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
+            JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
+            return;
+        }
+        Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
+        String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
+        if (nombre == null || nombre.trim().isEmpty()) {
+            return;
+        }
+        String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
+        if (bloquesStr == null) {
+            return;
+        }
+        try {
+            int tamano = Integer.parseInt(bloquesStr);
+            Color colorNuevo = obtenerColorAleatorio();
+            File nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo, log);
+            Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
+
+            if (!resultado.success) {
+                JOptionPane.showMessageDialog(this,
+                        "¡FALLA DETECTADA!\n"
+                        + "El sistema ha ejecutado una recuperación semiautomática.\n"
+                        + "Estado: " + resultado.errorMessage + "\n"
+                        + "Bloques restaurados: " + resultado.processedCount,
+                        "Recuperación del Sistema",
+                        JOptionPane.WARNING_MESSAGE);
+            } else {
+                // Si todo salió bien, agregamos al árbol
+                nuevoFile.setName(nombre.trim());
+                dirPadre.addFile(nuevoFile);
+                refrescarArbolUI((Directory) ((DefaultMutableTreeNode) arbolDirectorios.getModel().getRoot()).getUserObject());
                 int primerBloqueId = -1;
                 if (nuevoFile.getFirstBlock() != null) {
                     primerBloqueId = nuevoFile.getFirstBlock().getId();
@@ -660,8 +663,12 @@ public class JFramePrincipal extends javax.swing.JFrame {
             java.io.File archivo = fileChooser.getSelectedFile();
             try {
                 String contenidoJson = new String(Files.readAllBytes(Paths.get(archivo.getAbsolutePath())));
+
+                // Esta función ahora hace TODO: valida, crea y llena la tabla visualmente.
                 boolean esValido = validarEstructuraJSON(contenidoJson);
+
                 if (esValido) {
+                    // Solo mostramos el mensaje, ¡ya no borramos la tabla!
                     JOptionPane.showMessageDialog(this, "Archivo JSON leído y validado correctamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
                 } else {
                     JOptionPane.showMessageDialog(this, "El archivo JSON no tiene la estructura correcta (faltan campos o hay tipos de datos incorrectos).", "Error de Formato", JOptionPane.WARNING_MESSAGE);
@@ -712,19 +719,20 @@ public class JFramePrincipal extends javax.swing.JFrame {
         }
     }
 
-
-
     private void pintarArchivoEnPanel(File archivo, Color color) {
-    if (archivo == null) return;
-    
-    Block aux = archivo.getFirstBlock();
-    while (aux != null) {
-        // Marcamos el bloque en la vista visual del PanelSD
-        miDisco.getVistaDisco().asignarBloqueVisual(aux.getId(), color);
-        aux = aux.getNext();
+        if (archivo == null) {
+            return;
+        }
+
+        Block aux = archivo.getFirstBlock();
+        while (aux != null) {
+            // Marcamos el bloque en la vista visual del PanelSD
+            miDisco.getVistaDisco().asignarBloqueVisual(aux.getId(), color);
+            aux = aux.getNext();
+        }
     }
-}
-         public static void main(String args[]) {
+
+    public static void main(String args[]) {
         java.awt.EventQueue.invokeLater(() -> {
             try {
                 new JFramePrincipal().setVisible(true);
@@ -733,79 +741,130 @@ public class JFramePrincipal extends javax.swing.JFrame {
             }
         });
     }
-         
-private void iniciarDatosDePrueba() throws Exception {
-    Queue colaReal = miDisco.getColaLibres(); 
-    if (colaReal == null) return;
-    Directory carpetaRaiz = new Directory("Disco C:");
-    Directory carpetaFotos = new Directory("Fotos_Vacaciones");
-    Directory carpetaDocumentos = new Directory("Mis_Documentos");
-    carpetaRaiz.addDirectory(carpetaFotos);
-    carpetaRaiz.addDirectory(carpetaDocumentos);
-    File informe = new File(8, colaReal, "Admin",log);
-    informe.setName("informe_final.pdf");
-    carpetaDocumentos.addFile(informe); 
-    Color colorRojo = new Color(255, 51, 51);
-    Block b1 = informe.getFirstBlock();
-    while (b1 != null) {
-        miDisco.getVistaDisco().asignarBloqueVisual(b1.getId(), colorRojo);
-        b1 = b1.getNext();
+
+    private void iniciarDatosDePrueba() throws Exception {
+        Queue colaReal = miDisco.getColaLibres();
+        if (colaReal == null) {
+            return;
+        }
+        Directory carpetaRaiz = new Directory("Disco C:");
+        Directory carpetaFotos = new Directory("Fotos_Vacaciones");
+        Directory carpetaDocumentos = new Directory("Mis_Documentos");
+        carpetaRaiz.addDirectory(carpetaFotos);
+        carpetaRaiz.addDirectory(carpetaDocumentos);
+        File informe = new File(8, colaReal, "Admin", log);
+        informe.setName("informe_final.pdf");
+        carpetaDocumentos.addFile(informe);
+        Color colorRojo = new Color(255, 51, 51);
+        Block b1 = informe.getFirstBlock();
+        while (b1 != null) {
+            miDisco.getVistaDisco().asignarBloqueVisual(b1.getId(), colorRojo);
+            b1 = b1.getNext();
+        }
+
+        File foto = new File(12, colaReal, "Usuario", log);
+        foto.setName("foto_en_la_playa.jpg");
+        carpetaFotos.addFile(foto);
+        Color colorAmarillo = new Color(255, 204, 0);
+        Block b2 = foto.getFirstBlock();
+        while (b2 != null) {
+            miDisco.getVistaDisco().asignarBloqueVisual(b2.getId(), colorAmarillo);
+            b2 = b2.getNext();
+        }
+        File log1 = new File(4, colaReal, "System", log);
+        log1.setName("sistema.log");
+        carpetaRaiz.addFile(log1);
+        Color colorAzul = new Color(51, 153, 255);
+        Block b3 = log1.getFirstBlock();
+        while (b3 != null) {
+            miDisco.getVistaDisco().asignarBloqueVisual(b3.getId(), colorAzul);
+            b3 = b3.getNext();
+        }
+        refrescarArbolUI(carpetaRaiz);
     }
-    
-    File foto = new File(12, colaReal, "Usuario",log);
-    foto.setName("foto_en_la_playa.jpg");
-    carpetaFotos.addFile(foto);
-    Color colorAmarillo = new Color(255, 204, 0); 
-    Block b2 = foto.getFirstBlock();
-    while (b2 != null) {
-        miDisco.getVistaDisco().asignarBloqueVisual(b2.getId(), colorAmarillo);
-        b2 = b2.getNext();
-    }
-    File log1 = new File(4, colaReal, "System",log);
-    log1.setName("sistema.log");
-    carpetaRaiz.addFile(log1); 
-    Color colorAzul = new Color(51, 153, 255);
-    Block b3 = log1.getFirstBlock();
-    while (b3 != null) {
-        miDisco.getVistaDisco().asignarBloqueVisual(b3.getId(), colorAzul);
-        b3 = b3.getNext();
-    }
-    refrescarArbolUI(carpetaRaiz);
-}
 
     public boolean validarEstructuraJSON(String contenidoJson) throws Exception {
-    try {
-        JSONObject raiz = new JSONObject(contenidoJson);
-        miDisco.reiniciarEstructura(); 
-        generalRequests = new Queue("Requests"); 
-        Directory directory = new Directory(raiz.getString("test_id")); 
-        int cabezalInicial = raiz.getInt("initial_head");
-        miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
-        JSONObject systemFiles = raiz.getJSONObject("system_files");
-        Iterator<String> keys = systemFiles.keys();
-        while (keys.hasNext()) {
-            String key = keys.next();
-            JSONObject fileData = systemFiles.getJSONObject(key);
-            File tempFile = miDisco.crearArchivo(fileData.getInt("blocks"), "Admin", obtenerColorAleatorio(),log);
-            if (tempFile != null) {
-                tempFile.setName(fileData.getString("name"));
-                directory.addFile(tempFile);
-                pintarArchivoEnPanel(tempFile, obtenerColorAleatorio());
+        try {
+            System.out.println("--- INICIANDO LECTURA DE JSON ---");
+            JSONObject raiz = new JSONObject(contenidoJson);
+
+            modeloTabla.setRowCount(0);
+            System.out.println("1. Tabla limpiada.");
+
+            miDisco.reiniciarEstructura();
+            generalRequests = new Queue("Requests");
+            Directory directory = new Directory(raiz.getString("test_id"));
+            int cabezalInicial = raiz.getInt("initial_head");
+            miDisco.getPlanificador().setPosicionCabezal(cabezalInicial);
+
+            JSONObject systemFiles = raiz.getJSONObject("system_files");
+            System.out.println("2. JSON detecta " + systemFiles.length() + " archivos en system_files.");
+
+            Iterator<String> keys = systemFiles.keys();
+
+            while (keys.hasNext()) {
+                String key = keys.next();
+                JSONObject fileData = systemFiles.getJSONObject(key);
+                String nombreArchivo = fileData.getString("name");
+
+                System.out.println("-> Intentando crear archivo: " + nombreArchivo + " con " + fileData.getInt("blocks") + " bloques.");
+
+                Color colorArchivo = obtenerColorAleatorio();
+                File tempFile = miDisco.crearArchivo(fileData.getInt("blocks"), "Admin", colorArchivo, log);
+
+                if (tempFile != null) {
+                    System.out.println("   ¡Archivo creado con éxito! Agregando a la tabla...");
+                    tempFile.setName(nombreArchivo);
+                    directory.addFile(tempFile);
+
+                    pintarArchivoEnPanel(tempFile, colorArchivo);
+
+                    int primerBloqueId = -1;
+                    if (tempFile.getFirstBlock() != null) {
+                        primerBloqueId = tempFile.getFirstBlock().getId();
+                    }
+
+                    modeloTabla.addRow(new Object[]{
+                        tempFile.getName(),
+                        fileData.getInt("blocks"),
+                        primerBloqueId,
+                        colorArchivo
+                    });
+                } else {
+                    System.out.println("   [ERROR] tempFile devolvió NULL. ¿El disco está lleno o reiniciarEstructura() falló?");
+                }
             }
-        }          
+
             JSONArray requests = raiz.getJSONArray("requests");
+            System.out.println("3. Cargando " + requests.length() + " peticiones...");
             for (int i = 0; i < requests.length(); i++) {
                 JSONObject request = requests.getJSONObject(i);
                 Request request1 = new Request(request.getInt("pos"), request.getString("op"));
                 generalRequests.addRequest(request1);
             }
 
-            // 6. Actualizar la interfaz con la NUEVA estructura
             refrescarArbolUI(directory);
+            panelContenedorDisco.repaint();
 
+            System.out.println("--- LECTURA DE JSON FINALIZADA ---");
+            refrescarArbolUI(directory);
+            panelContenedorDisco.repaint();
+
+            System.out.println("--- LECTURA DE JSON FINALIZADA ---");
+
+            // ==========================================
+            // AGREGA ESTAS 3 LÍNEAS AQUÍ:
+            // ==========================================
+            modeloTabla.fireTableDataChanged(); // Avisa que los datos cambiaron
+            tablaAsignacion.revalidate();       // Recalcula el tamaño
+            tablaAsignacion.repaint();          // Fuerza el dibujo en pantalla
+            // ==========================================
             return true;
         } catch (JSONException e) {
-            System.out.println("Error de validación: " + e.getMessage());
+            System.out.println("Error de validación (JSONException): " + e.getMessage());
+            return false;
+        } catch (Exception e) {
+            System.out.println("Error general Exception: " + e.getMessage());
             return false;
         }
     }
