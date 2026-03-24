@@ -458,7 +458,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jadminisrtador1ActionPerformed
 
     private void crearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearActionPerformed
-
         if (!jadminisrtador1.isSelected()) {
             JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
             return;
@@ -468,74 +467,53 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
             return;
         }
-
         Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
         String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
         if (nombre == null || nombre.trim().isEmpty()) {
             return;
         }
-
         String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
         if (bloquesStr == null) {
             return;
         }
-
         File nuevoFile = null;
-
         try {
             int tamano = Integer.parseInt(bloquesStr);
             Color colorNuevo = obtenerColorAleatorio();
-
-            // LOG: Inicio de operación
             cicloActual++;
             agregarEventoLog("Intentando crear archivo '" + nombre.trim() + "' (" + tamano + " bloques)...");
-
             nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo, log);
-
-            // SIMULACIÓN DE FALLO
             if (this.simularFalloProximo) {
                 this.simularFalloProximo = false;
                 botonFallo.setBackground(null);
                 botonFallo.setText("Simular Fallo");
                 throw new Exception("FALLO_SIMULADO");
             }
-
             Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
-
             if (resultado.success) {
                 nuevoFile.setName(nombre.trim());
                 dirPadre.addFile(nuevoFile);
-
                 DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
                 DefaultMutableTreeNode nuevoNodo = new DefaultMutableTreeNode(nuevoFile);
                 modeloArbol.insertNodeInto(nuevoNodo, nodoSeleccionado, nodoSeleccionado.getChildCount());
-
                 modeloTabla.addRow(new Object[]{nuevoFile.getName(), tamano, nuevoFile.getFirstBlock().getId(), colorNuevo});
-
                 Block bloqueActual = nuevoFile.getFirstBlock();
                 while (bloqueActual != null) {
                     miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), colorNuevo);
                     bloqueActual = bloqueActual.getNext();
                 }
                 panelContenedorDisco.repaint();
-
-                // LOG: Éxito
                 cicloActual++;
                 agregarEventoLog("COMMIT: Archivo '" + nuevoFile.getName() + "' creado exitosamente.");
-
                 JOptionPane.showMessageDialog(this, "Archivo creado exitosamente.");
             }
-
         } catch (Exception e) {
             cicloActual++;
             if ("FALLO_SIMULADO".equals(e.getMessage())) {
                 if (nuevoFile != null) {
                     liberarArchivoVisualYTabla(nuevoFile);
                 }
-
-                // LOG: Rollback
                 agregarEventoLog("ROLLBACK: Fallo detectado. Bloques liberados. Disco intacto.");
-
                 JOptionPane.showMessageDialog(this, "Fallo de Sistema: Operación cancelada.\nLos bloques han sido liberados.", "Journal Rollback", JOptionPane.INFORMATION_MESSAGE);
             } else {
                 agregarEventoLog("ERROR: " + e.getMessage());
