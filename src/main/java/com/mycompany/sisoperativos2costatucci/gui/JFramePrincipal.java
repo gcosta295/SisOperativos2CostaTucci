@@ -67,34 +67,24 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }
 
     private Color obtenerColorAleatorio() {
-        // Generamos valores entre 0.2 y 0.8 
-        // Esto evita el negro total (0.0) y el blanco total (1.0)
+
         float r = 0.2f + (float) Math.random() * 0.6f;
         float g = 0.2f + (float) Math.random() * 0.6f;
         float b = 0.2f + (float) Math.random() * 0.6f;
-
-        // Retornamos el color. .brighter() ayuda a que resalten en el gris del disco.
         return new Color(r, g, b).brighter();
     }
 
-    // MÉTODO PARA PREPARAR LA TABLA DE ASIGNACIÓN
+  
     private DefaultTableModel modeloTabla;
 
     private void configurarTablaAsignacion() {
-        // 1. Creamos las columnas (sin Propietario)
+ 
         String[] columnas = {"Archivo", "Bloques", "Primer Bloque", "Color"};
         modeloTabla = new DefaultTableModel(columnas, 0);
-
-        // 2. Se lo aplicamos a la tabla de NetBeans
         tablaAsignacion.setModel(modeloTabla);
-
-        // 3. Le decimos a la columna 3 (la de Color) que use nuestro pintor especial
         tablaAsignacion.getColumnModel().getColumn(3).setCellRenderer(new ColorRenderer());
     }
 
-// ==========================================
-// 2. MÉTODO RECURSIVO PARA PINTAR EL DISCO
-// ==========================================
     // ==========================================
 // 2. MÉTODO RECURSIVO PARA PINTAR EL DISCO Y LLENAR LA TABLA
 // ==========================================
@@ -103,25 +93,20 @@ public class JFramePrincipal extends javax.swing.JFrame {
         // A. Recorrer y procesar los ARCHIVOS de esta carpeta
         if (carpetaLogica.getFiles() != null) {
             File actualArchivo = carpetaLogica.getFiles().getFirstFile();
-
             while (actualArchivo != null) {
                 Color colorArchivo = obtenerColorAleatorio();
                 int cantBloques = 0;
                 int primerBloque = -1;
-
                 Block actualBloque = actualArchivo.getFirstBlock();
-
                 // Guardamos cuál es el primer bloque para la tabla
                 if (actualBloque != null) {
                     primerBloque = actualBloque.getId();
                 }
-
                 while (actualBloque != null) {
                     panelDisco.asignarBloqueVisual(actualBloque.getId(), colorArchivo);
                     cantBloques++; // Contamos los bloques
                     actualBloque = actualBloque.getNext();
                 }
-
                 // ¡NUEVO! Agregamos los datos de este archivo a la tabla
                 modeloTabla.addRow(new Object[]{
                     actualArchivo.getName(),
@@ -134,7 +119,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
                 actualArchivo = actualArchivo.getNext();
             }
         }
-
         // B. Recorrer las SUBCARPETAS (Magia recursiva)
         if (carpetaLogica.getDirectories() != null) {
             Directory actualDir = carpetaLogica.getDirectories().getFirstDirectory();
@@ -144,7 +128,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
             }
         }
     }
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -600,71 +583,48 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_eliminarActionPerformed
 
     private void botonLeerActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonLeerActionPerformed
-// 1. Validar selección
         DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-
         if (nodoSeleccionado == null) {
             JOptionPane.showMessageDialog(this, "Por favor, seleccione un elemento en el árbol.");
             return;
         }
-
         Object objeto = nodoSeleccionado.getUserObject();
         if (!(objeto instanceof File)) {
             JOptionPane.showMessageDialog(this, "Solo se pueden leer ARCHIVOS. Seleccione un archivo válido.");
             return;
         }
-
         File archivoLeer = (File) objeto;
-
         if (archivoLeer.getFirstBlock() == null) {
             JOptionPane.showMessageDialog(this, "El archivo está vacío (0 bloques).");
             return;
         }
-
-        // 2. LOG: Iniciar Lectura
         cicloActual++;
         agregarEventoLog("SISTEMA: Iniciando lectura del archivo '" + archivoLeer.getName() + "'...");
-
-        // Deshabilitar el botón temporalmente para que el usuario no le dé varios clics seguidos
         botonLeer.setEnabled(false);
-
-        // 3. CREAR UN HILO PARA LA ANIMACIÓN (Para no congelar la pantalla)
+        //CREAR UN HILO PARA LA ANIMACIÓN (Para no congelar la pantalla)
         new Thread(new Runnable() {
             @Override
             public void run() {
                 Block bloqueActual = archivoLeer.getFirstBlock();
                 int contador = 1;
-
                 while (bloqueActual != null) {
-                    // Variables finales para poder usarlas dentro del update visual
                     final int idBloque = bloqueActual.getId();
                     final int numBloque = contador;
-
-                    // Actualizar la interfaz (Log) de forma segura
                     javax.swing.SwingUtilities.invokeLater(new Runnable() {
                         @Override
                         public void run() {
                             cicloActual++;
                             agregarEventoLog("-> Leyendo parte " + numBloque + " del archivo (Bloque físico ID: " + idBloque + ")...");
-
-                            // OPCIONAL: Si tuvieras un método para que el bloque parpadee visualmente en el disco, iría aquí.
-                            // miDisco.getVistaDisco().resaltarBloque(idBloque); 
                         }
                     });
-
-                    // 4. PAUSA PARA EL EFECTO VISUAL (800 milisegundos)
                     try {
                         Thread.sleep(800);
                     } catch (InterruptedException ex) {
                         ex.printStackTrace();
                     }
-
-                    // Pasar al siguiente bloque
                     bloqueActual = bloqueActual.getNext();
                     contador++;
                 }
-
-                // 5. FINALIZAR LECTURA
                 javax.swing.SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {
