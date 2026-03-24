@@ -518,57 +518,39 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_crearActionPerformed
 
     private void eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminarActionPerformed
-        // 1. Validar Permisos
         if (!jadminisrtador1.isSelected()) {
             JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
             return;
         }
-
-        // 2. Obtener lo que el usuario seleccionó en el árbol
         DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-
         if (nodoSeleccionado == null) {
             JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta en el árbol para eliminar.");
             return;
         }
-
-        // Proteger la raíz del disco para que no la borren por accidente
         if (nodoSeleccionado.isRoot()) {
             JOptionPane.showMessageDialog(this, "No se puede eliminar la raíz del disco duro.");
             return;
         }
-
-        // 3. Confirmación de seguridad
         int confirmacion = JOptionPane.showConfirmDialog(this,
                 "¿Está seguro de que desea eliminar '" + nodoSeleccionado.toString() + "' y todo su contenido de forma permanente?",
                 "Confirmar Eliminación",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
-
         if (confirmacion == JOptionPane.YES_OPTION) {
-            try {
-                // A. Disparamos la recursividad para liberar bloques y limpiar la tabla
-                eliminarNodoRecursivo(nodoSeleccionado);
-
-                // B. Eliminar del modelo del Árbol de la Interfaz
-                DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
-                modeloArbol.removeNodeFromParent(nodoSeleccionado);
-
-                // C. Refrescamos el dibujo del disco
-                panelContenedorDisco.repaint();
-
-                JOptionPane.showMessageDialog(this, "Elemento eliminado exitosamente.", "Éxito", JOptionPane.INFORMATION_MESSAGE);
-
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(this, "Error al intentar eliminar: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+        try {
+            eliminarNodoRecursivo(nodoSeleccionado); 
+            DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+            modeloArbol.removeNodeFromParent(nodoSeleccionado);
+            panelContenedorDisco.repaint();
+            JOptionPane.showMessageDialog(this, "Eliminado y bloques liberados.");
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
+    }
     }//GEN-LAST:event_eliminarActionPerformed
 
     private void eliminar1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminar1ActionPerformed
-        if (mode == "admin" || mode == "user") {
-            //lectura de archivo
-        }
+
     }//GEN-LAST:event_eliminar1ActionPerformed
 
     private void crear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crear1ActionPerformed
@@ -833,58 +815,78 @@ private void iniciarDatosDePrueba() throws Exception {
             return this;
         }
     }
+// === MÉTODO PARA RECORRER EL ÁRBOL Y LIBERAR BLOQUES ===
+private void eliminarNodoRecursivo(DefaultMutableTreeNode nodo) throws Exception {
+    Object userObj = nodo.getUserObject();
+    DefaultMutableTreeNode nodoPadre = (DefaultMutableTreeNode) nodo.getParent();
 
-    // --- FUNCIÓN RECURSIVA PARA RECORRER EL ÁRBOL Y ELIMINAR ---
-    private void eliminarNodoRecursivo(DefaultMutableTreeNode nodo) {
-        // 1. Recorrer y eliminar primero a todos los hijos (subcarpetas o archivos)
-        for (int i = 0; i < nodo.getChildCount(); i++) {
-            DefaultMutableTreeNode hijo = (DefaultMutableTreeNode) nodo.getChildAt(i);
-            eliminarNodoRecursivo(hijo);
-        }
+    if (userObj instanceof File) {
+        File archivo = (File) userObj;
+        
+        // 1. Liberamos bloques y tabla (Lo que ya hacíamos)
+        liberarArchivoVisualYTabla(archivo); 
 
-        // 2. Una vez que no tiene hijos, evaluamos qué es este nodo
-        Object contenido = nodo.getUserObject();
-        if (contenido instanceof File) {
-            liberarArchivoVisualYTabla((File) contenido);
+        // 2. ¡CRÍTICO! Eliminar el archivo de la lista de la CARPETA LÓGICA
+        if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
+            Directory carpetaPadre = (Directory) nodoPadre.getUserObject();
+            // Suponiendo que tu clase Directory tiene un método para quitar archivos
+            carpetaPadre.getFiles().removeFile(archivo); 
         }
-        // Nota: Si es Directory, no ocupa bloques, así que no hacemos nada especial aquí.
+    } 
+    else if (userObj instanceof Directory) {
+        // Si es carpeta, procesar hijos primero
+        for (int i = nodo.getChildCount() - 1; i >= 0; i--) {
+            eliminarNodoRecursivo((DefaultMutableTreeNode) nodo.getChildAt(i));
+        }
+        
+        // Al final, quitar la subcarpeta de la carpeta padre
+        if (nodoPadre != null && nodoPadre.getUserObject() instanceof Directory) {
+            Directory padre = (Directory) nodoPadre.getUserObject();
+            padre.getDirectories().removeDirectory((Directory) userObj);
+        }
     }
+}
 
-    // --- FUNCIÓN PARA LIMPIAR GRID, TABLA Y LÓGICA (CORREGIDA) ---
-    private void liberarArchivoVisualYTabla(File archivo) {
-        // A. Liberar en el Grid Visual y devolver a la cola
-        Block bloqueActual = archivo.getFirstBlock();
+// === MÉTODO QUE DEVUELVE LOS BLOQUES AL BITMAP (COLA DE LIBRES) ===
+private void liberarArchivoVisualYTabla(File archivo) {
+    Block bloqueActual = archivo.getFirstBlock();
+    if (bloqueActual == null) return;
 
-        while (bloqueActual != null) {
-            // 1. Guardamos quién es el siguiente
-            Block siguienteSeguro = bloqueActual.getNext();
+    while (bloqueActual != null) {
+        Block siguienteSeguro = bloqueActual.getNext();
 
-            // 2. Pintamos el bloque de blanco en el disco visual
+        // 1. INTERACCIÓN CON EL GESTOR DE DISCO (Vital para la Cola de Libres)
+        // Aquí es donde el GestorDisco recupera el control del bloque
+        if (miDisco.getColaLibres() != null) {
+            // Limpiamos el bloque antes de devolverlo
+            bloqueActual.setNext(null); 
+            
+            // USAR PUSH para que sea el primero en reasignarse
+            miDisco.getColaLibres().pushBlock(bloqueActual); 
+            
+            // 2. ACTUALIZACIÓN VISUAL (A través del gestor o su vista)
             miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), Color.WHITE);
-
-            // 3. ¡LA CLAVE! Desconectamos este bloque del resto del archivo
-            // (Asegúrate de tener este método en tu clase Block, si se llama distinto, cámbialo)
-            bloqueActual.setNext(null);
-
-            // 4. Ahora sí, lo metemos a la cola de libres de forma segura
-            if (miDisco.getColaLibres() != null) {
-                miDisco.getColaLibres().addBlock(bloqueActual);
-            }
-
-            // 5. Avanzamos al siguiente
-            bloqueActual = siguienteSeguro;
         }
 
-        // B. Eliminar de la Tabla de Asignación
-        for (int i = 0; i < modeloTabla.getRowCount(); i++) {
-            // Buscamos el archivo por su nombre
-            if (modeloTabla.getValueAt(i, 0).equals(archivo.getName())) {
-                modeloTabla.removeRow(i);
-                break;
-            }
+        bloqueActual = siguienteSeguro;
+    }
+    
+    archivo.setFirstBlock(null);
+
+    // 3. LIMPIAR TABLA DE ASIGNACIÓN
+    eliminarFilaDeTabla(archivo.getName());
+}  
+    
+// === MÉTODO PARA LIMPIAR LA FILA EN LA TABLA DE ASIGNACIÓN ===
+private void eliminarFilaDeTabla(String nombreArchivo) {
+    DefaultTableModel modelo = (DefaultTableModel) tablaAsignacion.getModel();
+    for (int i = 0; i < modelo.getRowCount(); i++) {
+        if (modelo.getValueAt(i, 0).toString().equals(nombreArchivo)) {
+            modelo.removeRow(i);
+            break; 
         }
     }
-
+}
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton Json;
