@@ -29,6 +29,7 @@ import javax.swing.JLabel;
 import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
+import javax.swing.tree.TreePath;
 
 /**
  *
@@ -43,6 +44,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private String mode;
     private Queue log;
     private int cicloActual = 0;
+    private boolean simularFalloProximo = false;
 
     public JFramePrincipal() throws Exception {
         initComponents();
@@ -238,6 +240,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         botonPrueba.addActionListener(this::botonPruebaActionPerformed);
 
         botonFallo.setText("Simular Fallo");
+        botonFallo.addActionListener(this::botonFalloActionPerformed);
 
         txtCabezalInicial.setText("Posicion Cabezal");
         txtCabezalInicial.addKeyListener(new java.awt.event.KeyAdapter() {
@@ -283,6 +286,8 @@ public class JFramePrincipal extends javax.swing.JFrame {
                                         .addGap(18, 18, 18)
                                         .addGroup(PanelControlesLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                                             .addComponent(botonFallo)
+                                            .addComponent(botonPrueba))))))))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                                             .addComponent(botonPrueba)))))))
                     .addGroup(PanelControlesLayout.createSequentialGroup()
                         .addGap(488, 488, 488)
@@ -492,33 +497,16 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_jadminisrtador1ActionPerformed
 
     private void crearActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crearActionPerformed
-        // Validamos si es administrador
-        if (!jadminisrtador1.isSelected()) {
-            JOptionPane.showMessageDialog(this,
-                    "Acceso denegado. Use el modo Administrador.",
-                    "Error de Permisos",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-        if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
-            JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
-            return;
-        }
-        Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
-        String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
-        if (nombre == null || nombre.trim().isEmpty()) {
-            return;
-        }
-        String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
-        if (bloquesStr == null) {
-            return;
-        }
-        try {
-            int tamano = Integer.parseInt(bloquesStr);
-            Color colorNuevo = obtenerColorAleatorio();
-            File nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo, log);
-            Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
+    // 1. Validaciones de Administrador y Selección (Tu código base)
+    if (!jadminisrtador1.isSelected()) {
+        JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+    if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
+        JOptionPane.showMessageDialog(this, "Por favor, seleccione una CARPETA en el árbol para crear el archivo.");
+        return;
+    }
 
             if (!resultado.success) {
                 // LOG: Registro de fallo en creación
@@ -547,16 +535,15 @@ public class JFramePrincipal extends javax.swing.JFrame {
                     primerBloqueId,
                     colorNuevo
                 });
+    Directory dirPadre = (Directory) nodoSeleccionado.getUserObject();
+    String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo archivo:");
+    if (nombre == null || nombre.trim().isEmpty()) return;
 
-                // --- C. ACTUALIZAR EL GRID VISUAL (CUADRITOS DEL DISCO) ---
-                Block bloqueActual = nuevoFile.getFirstBlock();
-                while (bloqueActual != null) {
-                    miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), colorNuevo);
-                    bloqueActual = bloqueActual.getNext();
-                }
+    String bloquesStr = JOptionPane.showInputDialog(this, "Cantidad de bloques a ocupar:");
+    if (bloquesStr == null) return;
 
-                // Forzamos la actualización visual del panel contenedor
-                panelContenedorDisco.repaint();
+    // Declaramos el archivo fuera del try para poder acceder a él en el catch
+    File nuevoFile = null; 
 
                 // LOG: Registro de creación exitosa
                 cicloActual++;
@@ -569,44 +556,126 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Por favor, ingrese un número válido para los bloques.", "Error", JOptionPane.ERROR_MESSAGE);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Error crítico: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+    try {
+        int tamano = Integer.parseInt(bloquesStr);
+        Color colorNuevo = obtenerColorAleatorio();
+        
+        // --- A. RESERVA LÓGICA ---
+        // Aquí miDisco saca los bloques de la cola de libres.
+        nuevoFile = miDisco.crearArchivo(tamano, "Admin", colorNuevo, log);
+
+        // ============================================================
+        // B. SIMULACIÓN DE FALLO (Ajustada a tu petición)
+        // ============================================================
+        if (this.simularFalloProximo) {
+            this.simularFalloProximo = false; 
+            botonFallo.setBackground(null);
+            botonFallo.setText("Simular Fallo");
+            
+            // Lanzamos el fallo ANTES de pintar y ANTES de registrar en el árbol.
+            // Esto garantiza que el display no cambie.
+            throw new Exception("FALLO_SIMULADO"); 
         }
+        // ============================================================
+
+        // C. OPERACIÓN SEGURA Y COMMIT
+        Recovery resultado = miDisco.ejecutarOperacionSegura(nuevoFile, "CREAR");
+
+        if (resultado.success) {
+            nuevoFile.setName(nombre.trim());
+            dirPadre.addFile(nuevoFile);
+            
+            // Actualizar JTree
+            DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+            DefaultMutableTreeNode nuevoNodo = new DefaultMutableTreeNode(nuevoFile);
+            modeloArbol.insertNodeInto(nuevoNodo, nodoSeleccionado, nodoSeleccionado.getChildCount());
+            
+            // Actualizar Tabla
+            modeloTabla.addRow(new Object[]{ nuevoFile.getName(), tamano, nuevoFile.getFirstBlock().getId(), colorNuevo });
+
+            // ACTUALIZAR DISPLAY VISUAL (Solo ocurre si no hubo fallo)
+            Block bloqueActual = nuevoFile.getFirstBlock();
+            while (bloqueActual != null) {
+                miDisco.getVistaDisco().asignarBloqueVisual(bloqueActual.getId(), colorNuevo);
+                bloqueActual = bloqueActual.getNext();
+            }
+            panelContenedorDisco.repaint();
+            JOptionPane.showMessageDialog(this, "Archivo creado exitosamente.");
+        }
+
+    } catch (Exception e) {
+        if ("FALLO_SIMULADO".equals(e.getMessage())) {
+            // --- D. RECUPERACIÓN (ROLLBACK) ---
+            // Como el fallo ocurrió, devolvemos los bloques a la cola de libres 
+            // para que no se queden "ocupados" u huérfanos.
+            if (nuevoFile != null) {
+                liberarArchivoVisualYTabla(nuevoFile); 
+            }
+            
+            JOptionPane.showMessageDialog(this, 
+                "Fallo de Sistema: Operación cancelada.\nLos bloques han sido liberados y no se alteró el disco.", 
+                "Journal Rollback", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
+        }
+    }
     }//GEN-LAST:event_crearActionPerformed
 
     private void eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_eliminarActionPerformed
-        if (!jadminisrtador1.isSelected()) {
-            JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
-        if (nodoSeleccionado == null) {
-            JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta en el árbol para eliminar.");
-            return;
-        }
-        if (nodoSeleccionado.isRoot()) {
-            JOptionPane.showMessageDialog(this, "No se puede eliminar la raíz del disco duro.");
-            return;
-        }
+    if (!jadminisrtador1.isSelected()) {
+        JOptionPane.showMessageDialog(this, "Acceso denegado. Use el modo Administrador.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
 
-        String nombreElemento = nodoSeleccionado.toString(); // Guardamos el nombre antes de borrarlo
+    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+    if (nodoSeleccionado == null) {
+        JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta en el árbol para eliminar.");
+        return;
+    }
 
-        int confirmacion = JOptionPane.showConfirmDialog(this,
-                "¿Está seguro de que desea eliminar '" + nombreElemento + "' y todo su contenido de forma permanente?",
-                "Confirmar Eliminación",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
-        if (confirmacion == JOptionPane.YES_OPTION) {
-            try {
-                eliminarNodoRecursivo(nodoSeleccionado);
-                DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
-                modeloArbol.removeNodeFromParent(nodoSeleccionado);
-                panelContenedorDisco.repaint();
+    if (nodoSeleccionado.isRoot()) {
+        JOptionPane.showMessageDialog(this, "No se puede eliminar la raíz del disco duro.");
+        return;
+    }
 
-                // LOG: Registro de eliminación
-                cicloActual++;
-                agregarEventoLog("Elemento eliminado y bloques liberados: '" + nombreElemento + "'.");
+    int confirmacion = JOptionPane.showConfirmDialog(this,
+            "¿Está seguro de que desea eliminar '" + nodoSeleccionado.toString() + "' y todo su contenido?",
+            "Confirmar Eliminación",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.WARNING_MESSAGE);
 
-                JOptionPane.showMessageDialog(this, "Eliminado y bloques liberados.");
-            } catch (Exception e) {
+    if (confirmacion == JOptionPane.YES_OPTION) {
+        try {
+            // ============================================================
+            // SIMULACIÓN DE FALLO (Para eliminación)
+            // ============================================================
+            if (this.simularFalloProximo) {
+                this.simularFalloProximo = false; // Resetear flag
+                botonFallo.setBackground(null);
+                botonFallo.setText("Simular Fallo");
+
+                // Lanzamos el error ANTES de tocar nada.
+                // Al lanzarlo aquí, no se llama a eliminarNodoRecursivo,
+                // por lo tanto los bloques NO se liberan y el JTree NO cambia.
+                throw new Exception("FALLO_SIMULADO_ELIMINAR");
+            }
+            // ============================================================
+
+            // Si no hay fallo, procedemos con la eliminación real (COMMIT)
+            eliminarNodoRecursivo(nodoSeleccionado); 
+            
+            DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+            modeloArbol.removeNodeFromParent(nodoSeleccionado);
+            
+            panelContenedorDisco.repaint();
+            JOptionPane.showMessageDialog(this, "Eliminado exitosamente y bloques liberados.");
+
+        } catch (Exception e) {
+            if ("FALLO_SIMULADO_ELIMINAR".equals(e.getMessage())) {
+                JOptionPane.showMessageDialog(this, 
+                    "Fallo de Sistema: La eliminación fue interrumpida.\nNo se realizaron cambios en el disco ni en el índice.", 
+                    "Journal Rollback", JOptionPane.WARNING_MESSAGE);
+            } else {
                 JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
             }
         }
@@ -653,50 +722,62 @@ public class JFramePrincipal extends javax.swing.JFrame {
     }//GEN-LAST:event_eliminar1ActionPerformed
 
     private void crear1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crear1ActionPerformed
-        if (!jadminisrtador1.isSelected()) {
-            JOptionPane.showMessageDialog(this,
-                    "Acceso Denegado: Solo el Administrador puede crear directorios.",
-                    "Error de Permisos",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
+    // 1. Validaciones de Administrador
+    if (!jadminisrtador1.isSelected()) {
+        JOptionPane.showMessageDialog(this, "Acceso Denegado: Solo el Administrador puede crear directorios.", "Error de Permisos", JOptionPane.ERROR_MESSAGE);
+        return;
+    }
+
+    // 2. Obtener y validar el nodo seleccionado
+    DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+    if (nodoSeleccionado == null || !(nodoSeleccionado.getUserObject() instanceof Directory)) {
+        JOptionPane.showMessageDialog(this, "Por favor, seleccione una carpeta válida en el árbol.");
+        return;
+    }
+
+    Directory carpetaPadre = (Directory) nodoSeleccionado.getUserObject();
+
+    // 3. Pedir el nombre
+    String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo directorio:");
+    if (nombre == null || nombre.trim().isEmpty()) return;
+
+    try {
+        // --- A. PREPARACIÓN LÓGICA ---
+        Directory nuevaCarpeta = new Directory(nombre.trim());
+
+        // ============================================================
+        // B. SIMULACIÓN DE FALLO
+        // ============================================================
+        if (this.simularFalloProximo) {
+            this.simularFalloProximo = false; // Resetear flag
+            botonFallo.setBackground(null);
+            botonFallo.setText("Simular Fallo");
+
+            // Lanzamos el error ANTES de añadirlo a la carpeta padre 
+            // y ANTES de refrescar el JTree.
+            throw new Exception("FALLO_SISTEMA_DIRECTORIO");
         }
+        // ============================================================
 
-        // 2. Obtener el nodo seleccionado en el árbol
-        DefaultMutableTreeNode nodoSeleccionado = (DefaultMutableTreeNode) arbolDirectorios.getLastSelectedPathComponent();
+        // --- C. COMMIT (Si no hay fallo) ---
+        carpetaPadre.addDirectory(nuevaCarpeta);
 
-        // 3. Validar selección
-        if (nodoSeleccionado == null) {
-            JOptionPane.showMessageDialog(this, "Por favor, seleccione una carpeta en el árbol donde desea crear el directorio.");
-            return;
+        // Refrescar el JTree
+        DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
+        DefaultMutableTreeNode raizNodo = (DefaultMutableTreeNode) modelo.getRoot();
+        refrescarArbolUI((Directory) raizNodo.getUserObject());
+
+        JOptionPane.showMessageDialog(this, "Directorio '" + nombre + "' creado exitosamente.");
+
+    } catch (Exception e) {
+        if ("FALLO_SISTEMA_DIRECTORIO".equals(e.getMessage())) {
+            JOptionPane.showMessageDialog(this, 
+                "Fallo detectado: Error al escribir en la tabla de directorios.\nLa operación ha sido abortada.", 
+                "Journal Rollback", JOptionPane.ERROR_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "Error: " + e.getMessage());
         }
-
-        Object objetoNodo = nodoSeleccionado.getUserObject();
-        if (!(objetoNodo instanceof Directory)) {
-            JOptionPane.showMessageDialog(this, "No puede crear directorios dentro de un archivo.");
-            return;
-        }
-
-        Directory carpetaPadre = (Directory) objetoNodo;
-
-        // 4. Pedir el nombre del nuevo directorio
-        String nombre = JOptionPane.showInputDialog(this, "Nombre del nuevo directorio:");
-
-        if (nombre != null && !nombre.trim().isEmpty()) {
-            // 5. Crear e integrar en la estructura lógica
-            Directory nuevaCarpeta = new Directory(nombre);
-            carpetaPadre.addDirectory(nuevaCarpeta);
-
-            // 6. Refrescar el JTree visualmente
-            DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
-            DefaultMutableTreeNode raizNodo = (DefaultMutableTreeNode) modelo.getRoot();
-            refrescarArbolUI((Directory) raizNodo.getUserObject());
-
-            // LOG: Registro de creación de directorio
-            cicloActual++;
-            agregarEventoLog("Directorio creado: '" + nombre + "' dentro de '" + carpetaPadre.getDirectoryName() + "'.");
-
-            JOptionPane.showMessageDialog(this, "Directorio '" + nombre + "' creado exitosamente.");
-        }
+    }
     }//GEN-LAST:event_crear1ActionPerformed
 
     private void updateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateActionPerformed
@@ -867,15 +948,19 @@ public class JFramePrincipal extends javax.swing.JFrame {
         timerAnimacion.start();
     }//GEN-LAST:event_botonPruebaActionPerformed
 
-    private void txtCabezalInicialKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtCabezalInicialKeyTyped
-        char c = evt.getKeyChar();
-        // Si la tecla presionada NO es un número (dígito), la ignoramos
-        if (!Character.isDigit(c)) {
-            evt.consume(); // Esto "se come" la tecla y no la deja aparecer en la pantalla
-
-            // Opcional: Un sonidito de error de Windows para que el usuario sepa que se equivocó
-            java.awt.Toolkit.getDefaultToolkit().beep();
-        }    }//GEN-LAST:event_txtCabezalInicialKeyTyped
+    private void botonFalloActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_botonFalloActionPerformed
+    this.simularFalloProximo = !this.simularFalloProximo; // Alterna el estado
+    
+    if (this.simularFalloProximo) {
+        botonFallo.setBackground(Color.RED);
+        botonFallo.setText("FALLO ACTIVO");
+        System.out.println("JOURNAL: El sistema fallará en la próxima escritura.");
+    } else {
+        botonFallo.setBackground(null);
+        botonFallo.setText("Simular Fallo");
+        System.out.println("JOURNAL: Simulación de fallo desactivada.");
+    }        // TODO add your handling code here:
+    }//GEN-LAST:event_botonFalloActionPerformed
 // Método auxiliar para ordenar arreglos (Bubble Sort)
 
     private void ordenarArreglo(int[] arr, int n) {
@@ -1120,37 +1205,35 @@ public class JFramePrincipal extends javax.swing.JFrame {
             Iterator<String> keys = systemFiles.keys();
 
             while (keys.hasNext()) {
-                String key = keys.next();
-                JSONObject fileData = systemFiles.getJSONObject(key);
-                String nombreArchivo = fileData.getString("name");
+    String key = keys.next(); // Esta es la posición (ej: "11")
+    int posicionInicial = Integer.parseInt(key); 
+    JSONObject fileData = systemFiles.getJSONObject(key);
+    String nombreArchivo = fileData.getString("name");
+    int cantBloques = fileData.getInt("blocks");
 
-                System.out.println("-> Intentando crear archivo: " + nombreArchivo + " con " + fileData.getInt("blocks") + " bloques.");
+    System.out.println("-> Cargando en posición " + posicionInicial + ": " + nombreArchivo);
 
-                Color colorArchivo = obtenerColorAleatorio();
-                File tempFile = miDisco.crearArchivo(fileData.getInt("blocks"), "Admin", colorArchivo, log);
+    Color colorArchivo = obtenerColorAleatorio();
+    
+    // CAMBIO CLAVE: Usamos un nuevo método que crearemos en GestorDisco
+    File tempFile = miDisco.cargarArchivoEnPosicionEspecifica(posicionInicial, cantBloques, "Admin", colorArchivo, log);
 
-                if (tempFile != null) {
-                    System.out.println("   ¡Archivo creado con éxito! Agregando a la tabla...");
-                    tempFile.setName(nombreArchivo);
-                    directory.addFile(tempFile);
+    if (tempFile != null) {
+        tempFile.setName(nombreArchivo);
+        directory.addFile(tempFile);
 
-                    pintarArchivoEnPanel(tempFile, colorArchivo);
+        // Pintar visualmente los bloques específicos
+        pintarArchivoEnPanel(tempFile, colorArchivo);
 
-                    int primerBloqueId = -1;
-                    if (tempFile.getFirstBlock() != null) {
-                        primerBloqueId = tempFile.getFirstBlock().getId();
-                    }
-
-                    modeloTabla.addRow(new Object[]{
-                        tempFile.getName(),
-                        fileData.getInt("blocks"),
-                        primerBloqueId,
-                        colorArchivo
-                    });
-                } else {
-                    System.out.println("   [ERROR] tempFile devolvió NULL. ¿El disco está lleno o reiniciarEstructura() falló?");
-                }
-            }
+        int primerBloqueId = tempFile.getFirstBlock().getId();
+        modeloTabla.addRow(new Object[]{
+            tempFile.getName(),
+            cantBloques,
+            primerBloqueId,
+            colorArchivo
+        });
+    }
+}
 
             JSONArray requests = raiz.getJSONArray("requests");
             System.out.println("3. Cargando " + requests.length() + " peticiones...");

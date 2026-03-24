@@ -295,4 +295,46 @@ public void pushBlock(Block block) {
             current = current.getNext();
         }
     }
+    
+    /**
+     * Busca un bloque por su ID dentro de la lista de bloques libres,
+     * lo desconecta de la cola y lo devuelve.
+     * * @param id El ID del bloque que se desea extraer (ej: 11, 34, 62)
+     * @return El bloque encontrado o null si no existe o ya no está libre.
+     */
+    public Block extraerBloquePorId(int id) {
+        if (this.firstBlock == null) {
+            return null; // La cola está vacía
+        }
+
+        // Caso 1: El bloque buscado es el primero de la lista (la cabeza)
+        if (this.firstBlock.getId() == id) {
+            Block temp = this.firstBlock;
+            this.firstBlock = this.firstBlock.getNext(); // Movemos el inicio al siguiente
+            temp.setNext(null); // Aislamos el bloque extraído
+            this.queuesize -= 1;
+            return temp;
+        }
+
+        // Caso 2: El bloque está en medio o al final de la lista
+        Block actual = this.firstBlock;
+        // Revisamos el "siguiente" de cada nodo para poder saltarlo
+        while (actual.getNext() != null) {
+            if (actual.getNext().getId() == id) {
+                Block encontrado = actual.getNext();
+                
+                // "Saltamos" el nodo encontrado para desconectarlo de la cadena
+                actual.setNext(encontrado.getNext());
+                
+                // Limpiamos el puntero del bloque extraído para que no arrastre a los demás
+                encontrado.setNext(null);
+                
+                this.queuesize -= 1;
+                return encontrado;
+            }
+            actual = actual.getNext();
+        }
+
+        return null; // Si llegamos aquí, el bloque no estaba en la cola de libres
+    }
 }
