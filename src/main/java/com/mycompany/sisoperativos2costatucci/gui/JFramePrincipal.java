@@ -44,9 +44,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
     private Queue log;
     private int cicloActual = 0;
 
-    /**
-     * Creates new form JFramePrincipal
-     */
     public JFramePrincipal() throws Exception {
         initComponents();
         txtCabezalInicial.setEditable(false);
@@ -65,9 +62,6 @@ public class JFramePrincipal extends javax.swing.JFrame {
         iniciarDatosDePrueba();
     }
 
-// ==========================================
-// 1. GENERADOR DE COLORES ALEATORIOS
-// ==========================================
     private Color obtenerColorAleatorio() {
         // Generamos valores entre 0.2 y 0.8 
         // Esto evita el negro total (0.0) y el blanco total (1.0)
@@ -79,9 +73,7 @@ public class JFramePrincipal extends javax.swing.JFrame {
         return new Color(r, g, b).brighter();
     }
 
-// ==========================================
     // MÉTODO PARA PREPARAR LA TABLA DE ASIGNACIÓN
-    // ==========================================
     private DefaultTableModel modeloTabla;
 
     private void configurarTablaAsignacion() {
@@ -721,29 +713,42 @@ public class JFramePrincipal extends javax.swing.JFrame {
             JOptionPane.showMessageDialog(this, "Seleccione un archivo o carpeta para renombrar.");
             return;
         }
+
         Object objeto = nodoSeleccionado.getUserObject();
-        String nombreActual = objeto.toString();
+        String nombreAnterior = objeto.toString(); // Guardamos el nombre viejo para buscarlo en la tabla
 
         // 3. Pedir el nuevo nombre
-        String nuevoNombre = JOptionPane.showInputDialog(this, "Ingrese el nuevo nombre:", nombreActual);
+        String nuevoNombre = JOptionPane.showInputDialog(this, "Ingrese el nuevo nombre:", nombreAnterior);
 
         if (nuevoNombre != null && !nuevoNombre.trim().isEmpty()) {
+            String nombreLimpio = nuevoNombre.trim();
+
             // 4. Actualizar la lógica según el tipo de objeto
             if (objeto instanceof File) {
-                ((File) objeto).setName(nuevoNombre.trim());
+                ((File) objeto).setName(nombreLimpio);
+
+                // === NUEVO: ACTUALIZAR LA TABLA VISUAL ===
+                // Recorremos todas las filas de la tabla para encontrar el nombre viejo
+                for (int i = 0; i < modeloTabla.getRowCount(); i++) {
+                    String nombreEnTabla = modeloTabla.getValueAt(i, 0).toString();
+                    if (nombreEnTabla.equals(nombreAnterior)) {
+                        modeloTabla.setValueAt(nombreLimpio, i, 0); // Cambiamos el nombre en la columna 0
+                        break; // Ya lo encontramos, dejamos de buscar
+                    }
+                }
             } else if (objeto instanceof Directory) {
-                ((Directory) objeto).setDirectoryName(nuevoNombre.trim());
+                ((Directory) objeto).setDirectoryName(nombreLimpio);
             }
 
-            // 5. Refrescar visualmente el árbol sin perder la estructura
-            DefaultTreeModel modelo = (DefaultTreeModel) arbolDirectorios.getModel();
-            modelo.nodeChanged(nodoSeleccionado);
+            // 5. Refrescar visualmente el árbol
+            DefaultTreeModel modeloArbol = (DefaultTreeModel) arbolDirectorios.getModel();
+            modeloArbol.nodeChanged(nodoSeleccionado);
 
             // LOG: Registro de renombrado
             cicloActual++;
-            agregarEventoLog("Renombrado: '" + nombreActual + "' ahora se llama '" + nuevoNombre.trim() + "'.");
+            agregarEventoLog("Renombrado: '" + nombreAnterior + "' ahora se llama '" + nombreLimpio + "'.");
 
-            JOptionPane.showMessageDialog(this, "Nombre actualizado correctamente.");
+            JOptionPane.showMessageDialog(this, "Nombre actualizado correctamente en Árbol y Tabla.");
         }
     }//GEN-LAST:event_updateActionPerformed
 
