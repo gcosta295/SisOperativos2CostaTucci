@@ -123,7 +123,7 @@
                               </Group>
                           </Group>
                       </Group>
-                      <EmptySpace pref="54" max="32767" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                   </Group>
               </Group>
             </DimensionLayout>
@@ -138,16 +138,18 @@
                           <Component id="jLabel3" alignment="3" min="-2" max="-2" attributes="0"/>
                       </Group>
                       <EmptySpace max="-2" attributes="0"/>
-                      <Group type="103" groupAlignment="3" attributes="0">
-                          <Component id="jadminisrtador1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="crear" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="eliminar" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="eliminar1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="crear1" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="update" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="Json" alignment="3" min="-2" max="-2" attributes="0"/>
-                          <Component id="botonPrueba" alignment="3" min="-2" max="-2" attributes="0"/>
+                      <Group type="103" groupAlignment="0" attributes="0">
                           <Component id="comboPolitica" alignment="1" min="-2" pref="22" max="-2" attributes="0"/>
+                          <Group type="103" groupAlignment="3" attributes="0">
+                              <Component id="jadminisrtador1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="crear" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="eliminar" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="eliminar1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="crear1" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="update" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="Json" alignment="3" min="-2" max="-2" attributes="0"/>
+                              <Component id="botonPrueba" alignment="3" min="-2" max="-2" attributes="0"/>
+                          </Group>
                       </Group>
                       <Group type="103" groupAlignment="0" attributes="0">
                           <Group type="102" attributes="0">
@@ -295,6 +297,9 @@
               <Properties>
                 <Property name="text" type="java.lang.String" value="Simular Fallo"/>
               </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="botonFalloActionPerformed"/>
+              </Events>
             </Component>
           </SubComponents>
         </Container>
