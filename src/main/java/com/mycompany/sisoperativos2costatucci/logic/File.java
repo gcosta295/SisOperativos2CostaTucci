@@ -40,30 +40,45 @@ public class File {
         return owner;
     }
 
-  public File(int size, Queue bitMap, String owner) {
-    // VALIDACIÓN PREVIA: Si no hay suficientes bloques, ni siquiera empezamos
-    if (bitMap.getQueuesize() < size) {
-        this.firstBlock = null;
-        this.sizeFile = 0;
-        return; // Salimos sin tocar el BitMap
-    }
-
+public File(int size, Queue bitMap, String owner, Queue log) throws Exception {
     this.owner = owner;
     this.sizeFile = size;
     this.next = null;
-
-    // Ahora sí, sacamos bloques con seguridad
-    this.firstBlock = bitMap.popFirstBlock();
-    if (this.firstBlock != null) {
-        Block current = this.firstBlock;
-        for (int i = 1; i < size; i++) {
-            Block nextBlock = bitMap.popFirstBlock();
-            if (nextBlock != null) {
+    synchronized(log) {
+        int initialLogSize = log.getQueuesize(); 
+        try {
+            if (size <= 0) return;
+            Block first = bitMap.popFirstBlock();
+            if (first == null) {
+                throw new Exception(" No hay bloques disponibles para iniciar el archivo.");
+            }
+            this.firstBlock = first;
+            log.addRow(new Row(null, first, false));
+            Block current = first;
+            for (int i = 1; i < size; i++) {
+                Block nextBlock = bitMap.popFirstBlock();
+                if (nextBlock == null) {
+                    throw new Exception(" Espacio insuficiente para completar el archivo.");
+                }
                 current.setNext(nextBlock);
                 current = nextBlock;
+                log.addRow(new Row(null, current, false));
             }
+            log.addRow(new Row(null, null, true));
+        } catch (Exception e) {
+            while (log.getQueuesize() > initialLogSize) {
+                Row lastAction = log.getFirstRow();
+                if (lastAction != null && lastAction.getAfterChange() != null) {
+                    Block blockToReturn = lastAction.getAfterChange();
+                    blockToReturn.setNext(null); // Desconectamos el bloque
+                    bitMap.pushBlock(blockToReturn); // Lo devolvemos al pool
+                }
+                log.deleteRow(); // Borramos del log
+            }
+            this.firstBlock = null; // Limpiamos el objeto File
+            throw e; // Llevamos el error al nivel superior
         }
-    }
+    } // Aquí se libera el log para que otros hilos puedan usarlo
 }
     public File getNext() {
         return next;

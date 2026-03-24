@@ -16,7 +16,7 @@ import java.awt.*;
 
 public class MainPrueba extends JFrame {
 
-    public MainPrueba() {
+    public MainPrueba() throws Exception {
         initComponents();
         // Configuración básica de la ventana
         setTitle("Simulador de Disco SD - Prueba Visual");
@@ -41,13 +41,13 @@ public class MainPrueba extends JFrame {
         // 3. ¡Hacemos la prueba! Simulamos la creación de 2 archivos
         // Archivo 1: Pide 5 bloques
         // Toma los 5 primeros bloques de colaLibres
-        File archivo1 = new File(5, colaLibres, "Admin");
+        File archivo1 = new File(5, colaLibres, "Admin",colaLibres);
         Color colorArchivo1 = new Color(70, 130, 180); // Azul acero
         pintarArchivoEnDisco(archivo1, vistaDisco, colorArchivo1);
 
         // Archivo 2: Pide 8 bloques
         // Toma los siguientes 8 bloques de colaLibres
-        File archivo2 = new File(8, colaLibres, "User1");
+        File archivo2 = new File(8, colaLibres, "User1",colaLibres);
         Color colorArchivo2 = new Color(60, 179, 113); // Verde
         pintarArchivoEnDisco(archivo2, vistaDisco, colorArchivo2);
 
